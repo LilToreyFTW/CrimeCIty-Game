@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { dbGet, dbRun } from '@/lib/database';
+import { dbGet, dbRun, ensureDatabase } from '@/lib/database';
+import { getPlayerData, initializePlayerData, updatePlayerStats } from '@/lib/gameDatabase';
 
 // Middleware to verify JWT token
 async function authenticateToken(request) {
@@ -32,16 +33,40 @@ export async function GET(request) {
   }
 
   try {
-    const user = await dbGet('SELECT game_data FROM users WHERE id = ?', [auth.userId]);
+    await ensureDatabase();
     
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    const gameData = user.game_data ? JSON.parse(user.game_data) : null;
+    // Get all player data from normalized tables
+    const playerData = await getPlayerData(auth.userId);
+    
+    // Also get inventory, properties, etc.
+    const { getPlayerInventory, getPlayerProperties, getCurrentJob, getPlayerEducation, getPlayerFaction } = await import('@/lib/gameDatabase');
+    const inventory = await getPlayerInventory(auth.userId);
+    const properties = await getPlayerProperties(auth.userId);
+    const currentJob = await getCurrentJob(auth.userId);
+    const education = await getPlayerEducation(auth.userId);
+    const faction = await getPlayerFaction(auth.userId);
+    
+    // Format as game data object
+    const gameData = {
+      player: {
+        ...playerData.player,
+        stats: playerData.combatStats,
+        workingStats: playerData.workingStats,
+        battleStats: playerData.battleStats,
+        crimeStats: playerData.crimeStats,
+        jobStats: playerData.jobStats,
+        factionStats: playerData.factionStats,
+        cooldowns: playerData.cooldowns,
+        statusEffects: playerData.statusEffects,
+        property: properties.length > 0 ? properties[0] : { name: 'None', cost: 0, fees: 0 },
+        faction: faction || { name: 'None', days: 0 }
+      },
+      inventory,
+      properties,
+      currentJob,
+      education
+    };
+    
     return NextResponse.json({ gameData });
   } catch (error) {
     console.error('Get game data error:', error);
@@ -59,6 +84,8 @@ export async function POST(request) {
   }
 
   try {
+    await ensureDatabase();
+    
     const { gameData } = await request.json();
     
     if (!gameData) {
@@ -68,20 +95,19 @@ export async function POST(request) {
       );
     }
 
-    const enhancedGameData = {
-      ...gameData,
-      lastSaved: new Date().toISOString(),
-      version: '1.0.0'
-    };
-
-    await dbRun(
-      'UPDATE users SET game_data = ? WHERE id = ?',
-      [JSON.stringify(enhancedGameData), auth.userId]
-    );
+    // Ensure player data is initialized
+    await initializePlayerData(auth.userId);
+    
+    // Update player stats from gameData
+    await updatePlayerStats(auth.userId, {
+      player: gameData.player,
+      combatStats: gameData.player?.stats,
+      workingStats: gameData.player?.workingStats
+    });
 
     return NextResponse.json({ 
       message: 'Game data saved successfully',
-      timestamp: enhancedGameData.lastSaved
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     console.error('Save game data error:', error);

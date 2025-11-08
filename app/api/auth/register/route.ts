@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { dbRun, dbGet } from '@/lib/database';
+import { dbRun, dbGet, ensureDatabase } from '@/lib/database';
 import { detectVPN, checkIPHistory } from '@/lib/ipUtils';
 import { generateVerificationToken, sendVerificationEmail } from '@/lib/emailService';
+import { initializePlayerData } from '@/lib/gameDatabase';
 
 export async function POST(request) {
   try {
+    await ensureDatabase();
     const { email, password, username, dateOfBirth } = await request.json();
     const clientIP = request.headers.get('x-forwarded-for')?.split(',')[0] || 
                      request.headers.get('x-real-ip') || 
@@ -167,6 +169,9 @@ export async function POST(request) {
        VALUES (?, ?, ?, ?)`,
       [result.lastID, email, verificationToken, verificationExpires.toISOString()]
     );
+
+    // Initialize player game data
+    await initializePlayerData(result.lastID);
 
     return NextResponse.json({
       message: 'Account created successfully. Please check your email for verification link.',
