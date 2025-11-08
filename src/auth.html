@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crime City - Authentication</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-container {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border: 2px solid #ff6b35;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        .auth-header {
+            margin-bottom: 2rem;
+        }
+
+        .auth-header h1 {
+            font-size: 2.5rem;
+            color: #ff6b35;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-header p {
+            color: #cccccc;
+            font-size: 1.1rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #333;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 1rem;
+            background: #333;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .auth-tab.active {
+            background: linear-gradient(145deg, #ff6b35, #e55a2b);
+        }
+
+        .auth-tab:hover {
+            background: linear-gradient(145deg, #ff6b35, #e55a2b);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #ff6b35;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #444;
+            border-radius: 10px;
+            background: #333;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(145deg, #ff6b35, #e55a2b);
+            border: none;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: linear-gradient(145deg, #dc3545, #c82333);
+            color: #ffffff;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message {
+            background: linear-gradient(145deg, #28a745, #1e7e34);
+            color: #ffffff;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .warning-message {
+            background: linear-gradient(145deg, #ffc107, #e0a800);
+            color: #000;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff6b35;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .ip-info {
+            background: #333;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #cccccc;
+        }
+
+        .ip-info strong {
+            color: #ff6b35;
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                margin: 1rem;
+                padding: 2rem;
+            }
+            
+            .auth-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1><i class="fas fa-skull-crossbones"></i> Crime City</h1>
+            <p>Enter the criminal underworld</p>
+        </div>
+
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="showTab('login')">Login</button>
+            <button class="auth-tab" onclick="showTab('register')">Register Here</button>
+        </div>
+
+        <!-- Error/Success Messages -->
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        <div id="warningMessage" class="warning-message"></div>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="auth-form active">
+            <div class="form-group">
+                <label for="loginEmail">Email Address</label>
+                <input type="email" id="loginEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" required>
+            </div>
+            <button type="submit" class="auth-btn" id="loginBtn">
+                <span id="loginBtnText">Login</span>
+                <span id="loginLoading" class="loading" style="display: none;"></span>
+            </button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="registerForm" class="auth-form">
+            <div class="form-group">
+                <label for="registerEmail">Email Address</label>
+                <input type="email" id="registerEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="registerEmailConfirm">Email Confirmation</label>
+                <input type="email" id="registerEmailConfirm" required>
+            </div>
+            <div class="form-group">
+                <label for="registerUsername">Username</label>
+                <input type="text" id="registerUsername" required>
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">Password</label>
+                <input type="password" id="registerPassword" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Password Confirmation</label>
+                <input type="password" id="confirmPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="registerDateOfBirth">Date of Birth</label>
+                <input type="text" id="registerDateOfBirth" placeholder="MM/DD/YYYY" required pattern="\d{2}/\d{2}/\d{4}">
+                <small style="color: #cccccc; font-size: 0.8rem; margin-top: 0.25rem; display: block;">Format: MM/DD/YYYY (e.g., 02/08/1999)</small>
+            </div>
+            <button type="submit" class="auth-btn" id="registerBtn">
+                <span id="registerBtnText">Create Account</span>
+                <span id="registerLoading" class="loading" style="display: none;"></span>
+            </button>
+        </form>
+
+        <div class="ip-info">
+            <strong>IP Address:</strong> <span id="currentIP">Loading...</span><br>
+            <strong>Security:</strong> <span id="securityStatus">Checking...</span>
+        </div>
+    </div>
+
+    <script type="module" src="/src/auth.js"></script>
+</body>
+</html>

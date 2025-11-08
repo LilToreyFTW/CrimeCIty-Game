@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - Crime City</title>
+    <link rel="stylesheet" href="html/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .verification-container {
+            max-width: 500px;
+            width: 100%;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border: 2px solid #444;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .verification-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .success .verification-icon {
+            color: #44ff44;
+        }
+        
+        .error .verification-icon {
+            color: #ff4444;
+        }
+        
+        .loading .verification-icon {
+            color: #ff6b35;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .verification-title {
+            font-size: 2rem;
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+        
+        .verification-message {
+            color: #ccc;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .verification-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(145deg, #ff6b35, #e55a2b);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+        
+        .action-btn.primary:hover {
+            background: linear-gradient(145deg, #e55a2b, #d14a1b);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+        
+        .action-btn.secondary {
+            background: linear-gradient(145deg, #444, #333);
+            color: white;
+            border: 2px solid #666;
+        }
+        
+        .action-btn.secondary:hover {
+            background: linear-gradient(145deg, #555, #444);
+            border-color: #777;
+        }
+        
+        .user-info {
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid #ff6b35;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .user-info p {
+            margin: 0.25rem 0;
+            color: #fff;
+        }
+        
+        .user-info .label {
+            color: #ff6b35;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container" id="verificationContainer">
+        <div class="verification-icon loading">
+            <i class="fas fa-spinner"></i>
+        </div>
+        <h1 class="verification-title">Verifying Your Email...</h1>
+        <p class="verification-message">Please wait while we verify your email address.</p>
+    </div>
+
+    <script>
+        async function verifyEmail() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            
+            if (!token) {
+                showError('No verification token provided');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/auth/verify-email?token=${token}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess(data);
+                } else {
+                    showError(data.error || 'Verification failed');
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                showError('Network error. Please try again.');
+            }
+        }
+
+        function showSuccess(data) {
+            const container = document.getElementById('verificationContainer');
+            container.className = 'verification-container success';
+            container.innerHTML = `
+                <div class="verification-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h1 class="verification-title">Email Verified!</h1>
+                <p class="verification-message">${data.message}</p>
+                
+                <div class="user-info">
+                    <p><span class="label">Username:</span> ${data.user.username}</p>
+                    <p><span class="label">Email:</span> ${data.user.email}</p>
+                </div>
+                
+                <div class="verification-actions">
+                    <a href="/" class="action-btn primary">
+                        <i class="fas fa-gamepad"></i> Play Crime City
+                    </a>
+                    <a href="/" class="action-btn secondary">
+                        <i class="fas fa-home"></i> Go to Login
+                    </a>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const container = document.getElementById('verificationContainer');
+            container.className = 'verification-container error';
+            container.innerHTML = `
+                <div class="verification-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h1 class="verification-title">Verification Failed</h1>
+                <p class="verification-message">${message}</p>
+                
+                <div class="verification-actions">
+                    <a href="/" class="action-btn primary">
+                        <i class="fas fa-home"></i> Go to Login
+                    </a>
+                    <button class="action-btn secondary" onclick="location.reload()">
+                        <i class="fas fa-redo"></i> Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        // Start verification when page loads
+        document.addEventListener('DOMContentLoaded', verifyEmail);
+    </script>
+</body>
+</html>

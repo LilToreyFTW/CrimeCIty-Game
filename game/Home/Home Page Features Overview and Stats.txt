@@ -1,0 +1,62 @@
+One Box Column
+Name _____ [0000001] the enclosed box with the 7 digit number column means basically like profile one signed up for example "[0000001] [0000002] [0000003] [0000004] [0000005] [9999999] the numbered profile of which signed up basically"
+Money $10,000.00
+Points 0
+Level 1
+Rank #7 Average Outcast
+Life 100
+Age (day 0 and the age of the account gets read basically with how many days its been on the game website after sign up)
+Marital status Single
+Networth
+
+Second Box Column
+
+Property Information
+Property "NAME OF PROPERTY OWNED"
+Cost $1,000 - to like 3Million depending on the property 
+Fees (+ $500 a Day)
+
+Third Column Box 
+Latest Attacks
+attack players do to you or attacks you do to players win or lose 
+
+Fourth Column Box
+Battle Stats
+Strength 100 −1% - 100%
+Defense 100 −1% - 100%
+Speed 100 −1% - 100%
+Dexterity 100 −1% - 100% 
+Total 400 (this is default starting stats) all stats can be upgraded by taking drugs and candy and the max cap for all stats is 999,999,999 1000% and each stat can be and only upgraded once you have higher energy more than 100 
+
+Fifth Column Box 
+Working Stats
+Manual labor 100
+Intelligence 100
+Endurance 100
+Total 300 by default starting as civilian but if appointed a job and that user does the tasks of that job daily these stats are also upgraded but they upgrade on their own due to progession of the Job the user is in 
+
+Sixth Column Box 
+Faction Information
+Faction None
+Days in faction (since account started in faction once the account has joined a faction to begin with)
+
+Seventh Column Box
+Job Information
+Job
+Rank
+Income
+Job Points
+
+Eighth Column Box
+Skill Levels
+Search for Cash 0.0
+Shoplifting 0.0
+Bootlegging 0.0
+Pickpocketing 0.0
+Graffiti 0.0
+Cracking 0.0
+[These skill level get upgraded the same way as jobs but also education]
+
+Ninth Columm Box 
+Latest Messages
+Basically any user added as a friend on our game site can send messages to users and to users withing their faction chat as well but this column box act like a Email Inbox when friends send messages to each other and on the home page you see your inbox in a column box as well  

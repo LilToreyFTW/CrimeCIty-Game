@@ -1,0 +1,26 @@
+# Ignore development files
+node_modules/
+.git/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore Vite files (we're not using Vite for deployment)
+vite.config.js
+dist/
+
+# Ignore test files
+test-*.js
+*.test.js
+*.spec.js
+
+# Ignore documentation
+*.md
+docs/
+
+# Ignore game assets that aren't needed for deployment
+game/
+
+# No build step needed
