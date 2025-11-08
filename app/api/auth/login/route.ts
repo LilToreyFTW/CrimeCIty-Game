@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { dbRun, dbGet } from '@/lib/database';
+import { dbRun, dbGet, ensureDatabase } from '@/lib/database';
 import { detectVPN, checkMeteredConnection } from '@/lib/ipUtils';
 
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
     const clientIP = request.headers.get('x-forwarded-for')?.split(',')[0] || 

@@ -6,7 +6,7 @@ import { detectVPN, checkIPHistory } from '@/lib/ipUtils';
 import { generateVerificationToken, sendVerificationEmail } from '@/lib/emailService';
 import { initializePlayerData } from '@/lib/gameDatabase';
 
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
     await ensureDatabase();
     const { email, password, username, dateOfBirth } = await request.json();
