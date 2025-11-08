@@ -13,10 +13,33 @@ const dbPath = process.env.NODE_ENV === 'production'
 
 export const db = new sqlite3.Database(dbPath);
 
-// Promisify database methods
-export const dbRun = promisify(db.run.bind(db));
-export const dbGet = promisify(db.get.bind(db));
-export const dbAll = promisify(db.all.bind(db));
+// Promisify database methods with proper typing
+export function dbRun(sql: string, params?: any[]): Promise<{ lastID: number; changes: number }> {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params || [], function(err) {
+      if (err) reject(err);
+      else resolve({ lastID: this.lastID, changes: this.changes });
+    });
+  });
+}
+
+export function dbGet(sql: string, params?: any[]): Promise<any> {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params || [], (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
+
+export function dbAll(sql: string, params?: any[]): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params || [], (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows || []);
+    });
+  });
+}
 
 // Lazy initialization flag
 let dbInitialized = false;
