@@ -1,46 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
+import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/nextjs';
 
 export default function GamePage() {
-  const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { isLoaded, userId } = useAuth();
+  const [gameHtmlLoaded, setGameHtmlLoaded] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        router.push('/auth');
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/auth/verify', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (response.ok) {
-          setIsAuthenticated(true);
-        } else {
-          localStorage.removeItem('authToken');
-          router.push('/auth');
-        }
-      } catch (error) {
-        router.push('/auth');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [router]);
-
-  useEffect(() => {
-    if (isAuthenticated && typeof window !== 'undefined') {
+    if (isLoaded && userId && typeof window !== 'undefined' && !gameHtmlLoaded) {
       // Load game HTML content from public folder
       fetch('/index.html')
         .then(res => {
@@ -58,6 +27,7 @@ export default function GamePage() {
             const container = document.getElementById('game-container');
             if (container) {
               container.innerHTML = gameContainer.innerHTML;
+              setGameHtmlLoaded(true);
               
               // Load game script after HTML is loaded
               const existingScript = document.querySelector('script[src="/html/css/script.js"]');
@@ -105,9 +75,9 @@ export default function GamePage() {
           }
         });
     }
-  }, [isAuthenticated]);
+  }, [isLoaded, userId, gameHtmlLoaded]);
 
-  if (loading) {
+  if (!isLoaded) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -123,11 +93,14 @@ export default function GamePage() {
     );
   }
 
-  if (!isAuthenticated) {
-    return null;
-  }
-
   return (
-    <div id="game-container" style={{ minHeight: '100vh' }} />
+    <>
+      <SignedOut>
+        <RedirectToSignIn />
+      </SignedOut>
+      <SignedIn>
+        <div id="game-container" style={{ minHeight: '100vh' }} />
+      </SignedIn>
+    </>
   );
 }
