@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crime City - Admin Panel</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .admin-sidebar {
+            width: 250px;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border-right: 2px solid #ff6b35;
+            padding: 2rem 0;
+        }
+
+        .admin-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 0 1rem;
+        }
+
+        .admin-header h1 {
+            color: #ff6b35;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-header p {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .admin-nav {
+            list-style: none;
+            padding: 0 1rem;
+        }
+
+        .admin-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-nav a {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .admin-nav a:hover,
+        .admin-nav a.active {
+            background: linear-gradient(145deg, #ff6b35, #e55a2b);
+            transform: translateX(5px);
+        }
+
+        .admin-nav i {
+            margin-right: 0.5rem;
+            width: 20px;
+        }
+
+        .admin-main {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .admin-content {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border: 2px solid #444;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #ff6b35;
+        }
+
+        .section-header h2 {
+            color: #ff6b35;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: #cccccc;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, #333, #222);
+            border: 2px solid #444;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 107, 53, 0.2);
+        }
+
+        .stat-card h3 {
+            color: #ff6b35;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card p {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+
+        .admin-table th {
+            background: linear-gradient(145deg, #ff6b35, #e55a2b);
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .admin-table tr:hover {
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-active {
+            background: linear-gradient(145deg, #28a745, #1e7e34);
+            color: #ffffff;
+        }
+
+        .status-inactive {
+            background: linear-gradient(145deg, #dc3545, #c82333);
+            color: #ffffff;
+        }
+
+        .admin-btn {
+            background: linear-gradient(145deg, #ff6b35, #e55a2b);
+            border: none;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.25rem;
+        }
+
+        .admin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        .admin-btn.danger {
+            background: linear-gradient(145deg, #dc3545, #c82333);
+        }
+
+        .admin-btn.success {
+            background: linear-gradient(145deg, #28a745, #1e7e34);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #ff6b35;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #444;
+            border-radius: 10px;
+            background: #333;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border: 2px solid #ff6b35;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-form h2 {
+            text-align: center;
+            color: #ff6b35;
+            margin-bottom: 2rem;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(145deg, #ff6b35, #e55a2b);
+            border: none;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .error-message {
+            background: linear-gradient(145deg, #dc3545, #c82333);
+            color: #ffffff;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message {
+            background: linear-gradient(145deg, #28a745, #1e7e34);
+            color: #ffffff;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff6b35;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .admin-key-display {
+            background: #333;
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .admin-code-display {
+            background: #333;
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff6b35;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                flex-direction: column;
+            }
+            
+            .admin-sidebar {
+                width: 100%;
+                padding: 1rem;
+            }
+            
+            .admin-main {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Form -->
+    <div id="loginSection" class="admin-container">
+        <div class="login-form">
+            <h2><i class="fas fa-crown"></i> Owner Login</h2>
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+            
+            <form id="ownerLoginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <span id="loginBtnText">Login as Owner</span>
+                    <span id="loginLoading" class="loading" style="display: none;"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-container" style="display: none;">
+        <div class="admin-sidebar">
+            <div class="admin-header">
+                <h1><i class="fas fa-crown"></i> Admin Panel</h1>
+                <p>Crime City Management</p>
+            </div>
+            
+            <ul class="admin-nav">
+                <li><a href="#" class="nav-link active" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a></li>
+                <li><a href="#" class="nav-link" data-section="users">
+                    <i class="fas fa-users"></i> Users
+                </a></li>
+                <li><a href="#" class="nav-link" data-section="admin-keys">
+                    <i class="fas fa-key"></i> Admin Keys
+                </a></li>
+                <li><a href="#" class="nav-link" data-section="admin-codes">
+                    <i class="fas fa-code"></i> Admin Codes
+                </a></li>
+                <li><a href="#" class="nav-link" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i> Analytics
+                </a></li>
+                <li><a href="#" class="nav-link" data-section="settings">
+                    <i class="fas fa-cog"></i> Settings
+                </a></li>
+            </ul>
+        </div>
+
+        <div class="admin-main">
+            <div class="admin-content">
+                <!-- Dashboard Section -->
+                <div id="dashboard" class="admin-section active">
+                    <div class="section-header">
+                        <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                        <p>Overview of Crime City statistics</p>
+                    </div>
+                    
+                    <div class="stats-grid" id="statsGrid">
+                        <!-- Stats will be loaded here -->
+                    </div>
+                    
+                    <div id="recentActivity">
+                        <h3>Recent Activity</h3>
+                        <table class="admin-table" id="recentActivityTable">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Last Login</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Recent activity will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Users Section -->
+                <div id="users" class="admin-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-users"></i> User Management</h2>
+                        <p>Manage all registered users</p>
+                    </div>
+                    
+                    <table class="admin-table" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Created</th>
+                                <th>Last Login</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Users will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Admin Keys Section -->
+                <div id="admin-keys" class="admin-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-key"></i> Admin Keys</h2>
+                        <p>Manage admin access keys</p>
+                    </div>
+                    
+                    <div id="adminKeysList">
+                        <!-- Admin keys will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Admin Codes Section -->
+                <div id="admin-codes" class="admin-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-code"></i> Admin Codes</h2>
+                        <p>Generate and manage admin access codes</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="targetUserId">Target User ID</label>
+                        <input type="number" id="targetUserId" placeholder="Enter user ID">
+                        <button class="admin-btn" onclick="generateAdminCode()">Generate Code</button>
+                    </div>
+                    
+                    <div id="generatedCode" class="admin-code-display" style="display: none;">
+                        <!-- Generated code will be displayed here -->
+                    </div>
+                    
+                    <div id="adminCodesList">
+                        <!-- Admin codes will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Analytics Section -->
+                <div id="analytics" class="admin-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-chart-bar"></i> Analytics</h2>
+                        <p>Game statistics and analytics</p>
+                    </div>
+                    
+                    <div id="analyticsContent">
+                        <!-- Analytics will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settings" class="admin-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-cog"></i> Settings</h2>
+                        <p>Admin panel settings</p>
+                    </div>
+                    
+                    <div id="settingsContent">
+                        <div class="form-group">
+                            <label>Admin Role</label>
+                            <input type="text" id="adminRole" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Permissions</label>
+                            <input type="text" id="adminPermissions" readonly>
+                        </div>
+                        <button class="admin-btn danger" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/admin.js"></script>
+</body>
+</html>

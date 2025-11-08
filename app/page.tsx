@@ -7,6 +7,7 @@ export default function Home() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [gameHtmlLoaded, setGameHtmlLoaded] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -40,10 +41,15 @@ export default function Home() {
   }, [router]);
 
   useEffect(() => {
-    if (isAuthenticated && typeof window !== 'undefined') {
-      // Load game HTML
+    if (isAuthenticated && typeof window !== 'undefined' && !gameHtmlLoaded) {
+      // Load game HTML content
       fetch('/index.html')
-        .then(res => res.text())
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('Failed to load game HTML');
+          }
+          return res.text();
+        })
         .then(html => {
           const parser = new DOMParser();
           const doc = parser.parseFromString(html, 'text/html');
@@ -53,23 +59,38 @@ export default function Home() {
             const container = document.getElementById('game-container');
             if (container) {
               container.innerHTML = gameContainer.innerHTML;
+              setGameHtmlLoaded(true);
+              
+              // Load game script after HTML is loaded
+              const script = document.createElement('script');
+              script.src = '/html/css/script.js';
+              script.async = true;
+              script.onerror = () => {
+                console.error('Failed to load game script');
+              };
+              document.body.appendChild(script);
+
+              // Load game styles
+              const existingLink = document.querySelector('link[href="/html/css/style.css"]');
+              if (!existingLink) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = '/html/css/style.css';
+                document.head.appendChild(link);
+              }
             }
           }
-
-          // Load game script
-          const script = document.createElement('script');
-          script.src = '/html/css/script.js';
-          script.async = true;
-          document.body.appendChild(script);
-
-          // Load game styles
-          const link = document.createElement('link');
-          link.rel = 'stylesheet';
-          link.href = '/html/css/style.css';
-          document.head.appendChild(link);
+        })
+        .catch(error => {
+          console.error('Error loading game HTML:', error);
+          // Fallback: create basic game container
+          const container = document.getElementById('game-container');
+          if (container) {
+            container.innerHTML = '<div style="padding: 20px; color: white;"><h1>Crime City</h1><p>Game loading...</p></div>';
+          }
         });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, gameHtmlLoaded]);
 
   if (loading) {
     return (
@@ -92,6 +113,6 @@ export default function Home() {
   }
 
   return (
-    <div id="game-container" />
+    <div id="game-container" style={{ minHeight: '100vh' }} />
   );
 }
