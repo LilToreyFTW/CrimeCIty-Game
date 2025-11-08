@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { dbGet, dbRun, ensureDatabase } from '@/lib/database';
-import { getPlayerData, updatePlayerStats } from '@/lib/gameDatabase';
-import { recordCrime } from '@/lib/gameDatabase';
+import { getPlayerData, updatePlayerStats, recordCrime } from '@/lib/gameDatabase';
 
 async function authenticateToken(request) {
   const authHeader = request.headers.get('authorization');

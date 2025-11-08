@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { dbGet, ensureDatabase } from '@/lib/database';
+import { dbGet, dbRun, ensureDatabase } from '@/lib/database';
 import { getPlayerData, updatePlayerStats, startJob, getCurrentJob } from '@/lib/gameDatabase';
 
 async function authenticateToken(request) {
@@ -169,13 +169,13 @@ export async function PUT(request) {
     await updatePlayerStats(auth.userId, updates);
 
     // Update job stats
-    await dbGet(
+    await dbRun(
       'UPDATE player_job_stats SET total_earnings = total_earnings + ?, hours_worked = hours_worked + 1, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
       [Math.floor(earnings), auth.userId]
     );
 
     // Set cooldown (10 minutes)
-    await dbGet(
+    await dbRun(
       'UPDATE player_cooldowns SET job = ? WHERE user_id = ?',
       [Date.now() + 600000, auth.userId]
     );

@@ -39,38 +39,43 @@ export async function getPlayerData(userId: number) {
 export async function initializePlayerData(userId: number) {
   await ensureDatabase();
   
-  await dbRun(
-    `INSERT OR IGNORE INTO player_stats (user_id) VALUES (?)`,
-    [userId]
-  );
-  await dbRun(
-    `INSERT OR IGNORE INTO player_combat_stats (user_id) VALUES (?)`,
-    [userId]
-  );
-  await dbRun(
-    `INSERT OR IGNORE INTO player_working_stats (user_id) VALUES (?)`,
-    [userId]
-  );
-  await dbRun(
-    `INSERT OR IGNORE INTO player_battle_stats (user_id) VALUES (?)`,
-    [userId]
-  );
-  await dbRun(
-    `INSERT OR IGNORE INTO player_crime_stats (user_id) VALUES (?)`,
-    [userId]
-  );
-  await dbRun(
-    `INSERT OR IGNORE INTO player_job_stats (user_id) VALUES (?)`,
-    [userId]
-  );
-  await dbRun(
-    `INSERT OR IGNORE INTO player_faction_stats (user_id) VALUES (?)`,
-    [userId]
-  );
-  await dbRun(
-    `INSERT OR IGNORE INTO player_cooldowns (user_id) VALUES (?)`,
-    [userId]
-  );
+  try {
+    await dbRun(
+      `INSERT OR IGNORE INTO player_stats (user_id) VALUES (?)`,
+      [userId]
+    );
+    await dbRun(
+      `INSERT OR IGNORE INTO player_combat_stats (user_id) VALUES (?)`,
+      [userId]
+    );
+    await dbRun(
+      `INSERT OR IGNORE INTO player_working_stats (user_id) VALUES (?)`,
+      [userId]
+    );
+    await dbRun(
+      `INSERT OR IGNORE INTO player_battle_stats (user_id) VALUES (?)`,
+      [userId]
+    );
+    await dbRun(
+      `INSERT OR IGNORE INTO player_crime_stats (user_id) VALUES (?)`,
+      [userId]
+    );
+    await dbRun(
+      `INSERT OR IGNORE INTO player_job_stats (user_id) VALUES (?)`,
+      [userId]
+    );
+    await dbRun(
+      `INSERT OR IGNORE INTO player_faction_stats (user_id) VALUES (?)`,
+      [userId]
+    );
+    await dbRun(
+      `INSERT OR IGNORE INTO player_cooldowns (user_id) VALUES (?)`,
+      [userId]
+    );
+  } catch (error) {
+    console.error('Error initializing player data:', error);
+    throw error;
+  }
 }
 
 export async function updatePlayerStats(userId: number, updates: any) {

@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { dbGet, ensureDatabase } from '@/lib/database';
-import { getPlayerData, updatePlayerStats } from '@/lib/gameDatabase';
-import { recordBattle } from '@/lib/gameDatabase';
+import { dbGet, dbRun, ensureDatabase } from '@/lib/database';
+import { getPlayerData, updatePlayerStats, recordBattle } from '@/lib/gameDatabase';
 
 async function authenticateToken(request) {
   const authHeader = request.headers.get('authorization');
@@ -99,7 +98,7 @@ export async function POST(request) {
     );
 
     // Set cooldown (5 minutes)
-    await dbGet(
+    await dbRun(
       'UPDATE player_cooldowns SET battle = ? WHERE user_id = ?',
       [Date.now() + 300000, auth.userId]
     );

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { dbGet, dbAll, ensureDatabase } from '@/lib/database';
-import { getPlayerData, addItemToInventory, getPlayerInventory } from '@/lib/gameDatabase';
+import { dbGet, dbRun, dbAll, ensureDatabase } from '@/lib/database';
+import { getPlayerData, updatePlayerStats, addItemToInventory, getPlayerInventory } from '@/lib/gameDatabase';
 
 async function authenticateToken(request) {
   const authHeader = request.headers.get('authorization');
@@ -52,7 +52,7 @@ export async function POST(request) {
     await addItemToInventory(auth.userId, itemType, itemName, quantity);
 
     // Record transaction
-    await dbGet(
+    await dbRun(
       'INSERT INTO market_transactions (user_id, transaction_type, item_name, item_type, quantity, price) VALUES (?, ?, ?, ?, ?, ?)',
       [auth.userId, 'buy', itemName, itemType, quantity, totalCost]
     );
@@ -118,13 +118,13 @@ export async function PUT(request) {
 
     // Update inventory
     if (item.quantity === quantity) {
-      await dbGet('DELETE FROM player_inventory WHERE id = ?', [itemId]);
+      await dbRun('DELETE FROM player_inventory WHERE id = ?', [itemId]);
     } else {
-      await dbGet('UPDATE player_inventory SET quantity = quantity - ? WHERE id = ?', [quantity, itemId]);
+      await dbRun('UPDATE player_inventory SET quantity = quantity - ? WHERE id = ?', [quantity, itemId]);
     }
 
     // Record transaction
-    await dbGet(
+    await dbRun(
       'INSERT INTO market_transactions (user_id, transaction_type, item_name, item_type, quantity, price) VALUES (?, ?, ?, ?, ?, ?)',
       [auth.userId, 'sell', item.item_name, item.item_type, quantity, totalEarnings]
     );
