@@ -9,10 +9,6 @@ const nextConfig = {
   },
   // Enable static file serving
   output: 'standalone',
-  // Serve static files from public directory
-  publicRuntimeConfig: {
-    // Add any runtime config here
-  },
 }
 
-module.exports = nextConfig
+export default nextConfig
