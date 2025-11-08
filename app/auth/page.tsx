@@ -2,6 +2,8 @@
 
 import { SignIn, SignUp } from '@clerk/nextjs';
 
+export const dynamic = 'force-dynamic';
+
 export default function AuthPage() {
   return (
     <div style={{
