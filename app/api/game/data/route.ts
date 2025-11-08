@@ -13,7 +13,7 @@ async function authenticateToken(request) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: number; email: string; username: string };
     const user = await dbGet('SELECT id, email, username FROM users WHERE id = ?', [decoded.userId]);
     
     if (!user) {
