@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { dbGet, dbRun } from '@/lib/database';
 import { generateVerificationToken, sendResendVerificationEmail } from '@/lib/emailService';
 
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
     const { email } = await request.json();
     

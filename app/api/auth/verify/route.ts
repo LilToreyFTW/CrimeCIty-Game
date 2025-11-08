@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { dbGet } from '@/lib/database';
 
-export async function GET(request) {
+export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.split(' ')[1];
