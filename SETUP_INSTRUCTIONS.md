@@ -1,12 +1,12 @@
-# Quick Setup Instructions
+# Updated Setup Instructions - New Secret Key
 
-## ✅ Local Development Setup Complete
+## ✅ Local Development Setup Updated
 
-Your `.env.local` file has been created with your Clerk keys. This file is gitignored and will NOT be committed.
+Your `.env.local` file has been updated with the new Clerk Secret Key.
 
 ## 🔧 Vercel Environment Variables Setup
 
-The CLI requires interactive input. Please add your environment variables via the Vercel Dashboard:
+**IMPORTANT:** Update the Secret Key in Vercel Dashboard:
 
 ### Steps:
 
@@ -14,44 +14,31 @@ The CLI requires interactive input. Please add your environment variables via th
    - Visit: https://vercel.com/dashboard
    - Select project: `battlegamewebsite`
 
-2. **Add Environment Variables**
+2. **Update Environment Variable**
    - Go to **Settings** → **Environment Variables**
-   - Click **Add New**
-
-3. **Add First Variable:**
-   - Key: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-   - Value: `pk_test_cHJlbWl1bS1hZGRlci0yNC5jbGVyay5hY2NvdW50cy5kZXYk`
-   - Environments: ✅ Production ✅ Preview ✅ Development
+   - Find `CLERK_SECRET_KEY`
+   - Click **Edit** or **Update**
+   - Change value to: `sk_test_ErW3I6onB9B81lNhIiVbrprOdF05qRIkpuz1KpUZAG`
+   - Make sure it's enabled for: ✅ Production ✅ Preview ✅ Development
    - Click **Save**
 
-4. **Add Second Variable:**
-   - Key: `CLERK_SECRET_KEY`
-   - Value: `sk_test_7WXxtIo4s8ce16dalblk0vgpZjMbeBN6IoVcu4cKmf`
-   - Environments: ✅ Production ✅ Preview ✅ Development
-   - Click **Save**
+3. **Verify Publishable Key**
+   - Ensure `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is set to: `pk_test_cHJlbWl1bS1hZGRlci0yNC5jbGVyay5hY2NvdW50cy5kZXYk`
+   - If not present, add it with all environments enabled
 
-5. **Redeploy**
-   - After saving, Vercel will automatically trigger a new deployment
-   - Or manually go to **Deployments** → Click **Redeploy** on latest deployment
+4. **Redeploy**
+   - After updating, Vercel will automatically trigger a new deployment
+   - Or manually go to **Deployments** → Click **Redeploy**
 
-### Alternative: Use Vercel CLI (Interactive)
+### Current Environment Variables:
 
-If you prefer CLI, run these commands and paste the values when prompted:
-
-```bash
-vercel env add NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY production
-# Paste: pk_test_cHJlbWl1bS1hZGRlci0yNC5jbGVyay5hY2NvdW50cy5kZXYk
-
-vercel env add CLERK_SECRET_KEY production
-# Paste: sk_test_7WXxtIo4s8ce16dalblk0vgpZjMbeBN6IoVcu4cKmf
-
-vercel --prod --yes
-```
+**Production:**
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` = `pk_test_cHJlbWl1bS1hZGRlci0yNC5jbGVyay5hY2NvdW50cy5kZXYk`
+- `CLERK_SECRET_KEY` = `sk_test_ErW3I6onB9B81lNhIiVbrprOdF05qRIkpuz1KpUZAG`
 
 ## ✅ Verification
 
-After adding variables and redeploying:
+After updating and redeploying:
 - Check deployment logs - should show successful build
 - Visit your production URL
-- You should see Sign In/Sign Up buttons working
-
+- Test Sign In/Sign Up functionality
