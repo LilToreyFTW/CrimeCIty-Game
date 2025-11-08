@@ -316,7 +316,7 @@ router.put('/users/:id/status', authenticateAdmin, async (req, res) => {
 router.get('/admin-keys', authenticateAdmin, async (req, res) => {
   try {
     const keys = await dbAll(
-      'SELECT key_type, is_active, used_by, used_at, created_at FROM admin_keys ORDER BY created_at DESC'
+      'SELECT id, key_string, key_type, is_active, used_by, used_at, created_at FROM admin_keys ORDER BY created_at DESC'
     );
 
     res.json({ keys });

@@ -235,12 +235,69 @@ class AdminPanel {
                 <td>${user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</td>
                 <td><span class="status-badge ${user.is_active ? 'status-active' : 'status-inactive'}">${user.is_active ? 'Active' : 'Inactive'}</span></td>
                 <td>
+                    <button class="admin-btn" onclick="viewUserDetails(${user.id})">View Details</button>
                     <button class="admin-btn ${user.is_active ? 'danger' : 'success'}" onclick="toggleUserStatus(${user.id}, ${user.is_active})">
                         ${user.is_active ? 'Deactivate' : 'Activate'}
                     </button>
                 </td>
             </tr>
         `).join('');
+    }
+
+    async loadUserDetails(userId) {
+        try {
+            const response = await fetch(`/api/admin/users/${userId}`, {
+                headers: {
+                    'Authorization': `Bearer ${this.authToken}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.displayUserDetails(data.user);
+            }
+        } catch (error) {
+            console.error('Failed to load user details:', error);
+            this.showError('Failed to load user details');
+        }
+    }
+
+    displayUserDetails(user) {
+        const modal = document.getElementById('userDetailsModal');
+        if (!modal) {
+            // Create modal if it doesn't exist
+            const modalHTML = `
+                <div id="userDetailsModal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeUserDetails()">&times;</span>
+                        <h2>User Details</h2>
+                        <div id="userDetailsContent"></div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        const content = document.getElementById('userDetailsContent');
+        const gameData = user.game_data ? JSON.parse(user.game_data) : null;
+        
+        content.innerHTML = `
+            <div class="user-details">
+                <p><strong>ID:</strong> ${user.id}</p>
+                <p><strong>Username:</strong> ${user.username}</p>
+                <p><strong>Email:</strong> ${user.email}</p>
+                <p><strong>Created:</strong> ${new Date(user.created_at).toLocaleString()}</p>
+                <p><strong>Last Login:</strong> ${user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</p>
+                <p><strong>Status:</strong> <span class="status-badge ${user.is_active ? 'status-active' : 'status-inactive'}">${user.is_active ? 'Active' : 'Inactive'}</span></p>
+                ${user.adminRole ? `<p><strong>Admin Role:</strong> ${user.adminRole.role}</p>` : ''}
+                ${gameData ? `
+                    <h3>Game Data</h3>
+                    <pre style="background: #333; padding: 1rem; border-radius: 10px; overflow-x: auto;">${JSON.stringify(gameData, null, 2)}</pre>
+                ` : '<p>No game data available</p>'}
+            </div>
+        `;
+
+        document.getElementById('userDetailsModal').style.display = 'block';
     }
 
     async loadAdminKeys() {
@@ -265,7 +322,9 @@ class AdminPanel {
         container.innerHTML = keys.map(key => `
             <div class="admin-key-display">
                 <h4>${key.key_type}</h4>
-                <p><strong>Key:</strong> ${key.key_string}</p>
+                <p><strong>Key:</strong> <span id="key-${key.id}">${key.key_string || 'N/A'}</span>
+                    ${key.key_string ? `<button class="admin-btn" onclick="copyAdminKey('key-${key.id}')" style="margin-left: 10px; padding: 0.25rem 0.5rem; font-size: 0.8rem;">Copy</button>` : ''}
+                </p>
                 <p><strong>Status:</strong> ${key.is_active ? 'Active' : 'Inactive'}</p>
                 <p><strong>Used by:</strong> ${key.used_by || 'Not used'}</p>
                 <p><strong>Used at:</strong> ${key.used_at ? new Date(key.used_at).toLocaleString() : 'Never'}</p>
@@ -351,6 +410,9 @@ class AdminPanel {
 }
 
 // Global functions
+function logout() {
+    adminPanel.logout();
+}
 async function generateAdminCode() {
     const targetUserId = document.getElementById('targetUserId').value;
     
@@ -389,6 +451,29 @@ async function generateAdminCode() {
     }
 }
 
+async function viewUserDetails(userId) {
+    await adminPanel.loadUserDetails(userId);
+}
+
+function closeUserDetails() {
+    const modal = document.getElementById('userDetailsModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function copyAdminKey(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        const text = element.textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            adminPanel.showSuccess('Admin key copied to clipboard!');
+        }).catch(() => {
+            adminPanel.showError('Failed to copy key');
+        });
+    }
+}
+
 async function toggleUserStatus(userId, currentStatus) {
     try {
         const response = await fetch(`/api/admin/users/${userId}/status`, {
@@ -401,14 +486,15 @@ async function toggleUserStatus(userId, currentStatus) {
         });
 
         if (response.ok) {
+            adminPanel.showSuccess('User status updated successfully');
             adminPanel.loadUsers();
         } else {
             const data = await response.json();
-            alert(data.error);
+            adminPanel.showError(data.error);
         }
     } catch (error) {
         console.error('Failed to toggle user status:', error);
-        alert('Failed to update user status');
+        adminPanel.showError('Failed to update user status');
     }
 }
 
