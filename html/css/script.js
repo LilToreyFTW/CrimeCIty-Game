@@ -911,6 +911,9 @@ class GameActions {
             });
         });
 
+        // Education system
+        this.initializeEducationSystem();
+
         // Crime buttons
         document.querySelectorAll('.crime-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -1145,6 +1148,699 @@ class GameActions {
         this.showModal('Raceways', 'Welcome to the Raceways!\n\nRace cars and win money!\n\n1. Street Racing - $500 entry\n2. Professional Racing - $2,000 entry\n3. Championship Racing - $10,000 entry', () => {
             this.showRacingOptions();
         });
+    }
+
+    // Education System
+    initializeEducationSystem() {
+        // Education tab switching
+        document.querySelectorAll('.education-tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tabId = e.currentTarget.dataset.tab;
+                this.switchEducationTab(tabId);
+            });
+        });
+
+        // Course category filtering
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const category = e.currentTarget.dataset.category;
+                this.filterCoursesByCategory(category);
+            });
+        });
+
+        // Library category filtering
+        document.querySelectorAll('.lib-category-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const category = e.currentTarget.dataset.category;
+                this.filterLibraryByCategory(category);
+            });
+        });
+
+        // Certificate filters
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const filter = e.currentTarget.dataset.filter;
+                this.filterCertificates(filter);
+            });
+        });
+
+        // Library search
+        const searchInput = document.getElementById('librarySearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.searchLibrary(e.target.value);
+            });
+        }
+
+        // Initialize education data
+        this.loadEducationData();
+    }
+
+    switchEducationTab(tabId) {
+        // Hide all tabs
+        document.querySelectorAll('.education-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+
+        // Remove active class from buttons
+        document.querySelectorAll('.education-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected tab
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) {
+            targetTab.classList.add('active');
+        }
+
+        // Add active class to button
+        const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+    }
+
+    loadEducationData() {
+        // Load courses
+        this.loadCourses();
+
+        // Load progress
+        this.loadProgress();
+
+        // Load certificates
+        this.loadCertificates();
+
+        // Load library
+        this.loadLibrary();
+    }
+
+    loadCourses() {
+        const courses = [
+            {
+                id: 'combat-training',
+                name: 'Combat Training',
+                category: 'combat',
+                description: 'Learn basic combat techniques and improve your fighting skills.',
+                duration: '2 hours',
+                energyCost: 20,
+                skillGain: '+5 Strength, +3 Defense',
+                prerequisites: 'None',
+                enrolled: false,
+                completed: false
+            },
+            {
+                id: 'self-defense',
+                name: 'Self Defense',
+                category: 'combat',
+                description: 'Master defensive techniques to protect yourself in any situation.',
+                duration: '1.5 hours',
+                energyCost: 18,
+                skillGain: '+7 Defense, +5 Dexterity',
+                prerequisites: 'None',
+                enrolled: false,
+                completed: false
+            },
+            {
+                id: 'business',
+                name: 'Business Fundamentals',
+                category: 'business',
+                description: 'Learn the basics of business management and entrepreneurship.',
+                duration: '2 hours',
+                energyCost: 15,
+                skillGain: '+6 Intelligence, +0.5 Search for Cash',
+                prerequisites: 'None',
+                enrolled: false,
+                completed: false
+            },
+            {
+                id: 'computer-science',
+                name: 'Computer Science',
+                category: 'technology',
+                description: 'Dive into programming, algorithms, and computer systems.',
+                duration: '3 hours',
+                energyCost: 20,
+                skillGain: '+10 Intelligence, +0.3 Cracking',
+                prerequisites: 'None',
+                enrolled: false,
+                completed: false
+            },
+            {
+                id: 'biology',
+                name: 'Biology',
+                category: 'science',
+                description: 'Study living organisms and biological processes.',
+                duration: '2 hours',
+                energyCost: 15,
+                skillGain: '+8 Intelligence',
+                prerequisites: 'None',
+                enrolled: false,
+                completed: false
+            },
+            {
+                id: 'law',
+                name: 'Criminal Law',
+                category: 'arts',
+                description: 'Understand legal systems and criminal justice procedures.',
+                duration: '2.5 hours',
+                energyCost: 18,
+                skillGain: '+7 Intelligence, +2 Defense',
+                prerequisites: 'None',
+                enrolled: false,
+                completed: false
+            },
+            {
+                id: 'sports-science',
+                name: 'Sports Science',
+                category: 'sports',
+                description: 'Learn about human physiology and athletic performance.',
+                duration: '2 hours',
+                energyCost: 15,
+                skillGain: '+6 Speed, +4 Endurance',
+                prerequisites: 'None',
+                enrolled: false,
+                completed: false
+            }
+        ];
+
+        this.courses = courses;
+        this.displayCourses('all');
+    }
+
+    displayCourses(category) {
+        const grid = document.getElementById('coursesGrid');
+        if (!grid) return;
+
+        let filteredCourses = this.courses;
+        if (category !== 'all') {
+            filteredCourses = this.courses.filter(course => course.category === category);
+        }
+
+        grid.innerHTML = '';
+
+        filteredCourses.forEach(course => {
+            const courseCard = document.createElement('div');
+            courseCard.className = 'course-card';
+            courseCard.onclick = () => this.showCourseModal(course);
+
+            courseCard.innerHTML = `
+                <h4>${course.name}</h4>
+                <div class="category" style="background: ${this.getCategoryColor(course.category)}">${this.getCategoryName(course.category)}</div>
+                <p>${course.description}</p>
+                <div class="course-stats">
+                    <div class="course-stat">
+                        <span class="label">Duration:</span>
+                        <span class="value">${course.duration}</span>
+                    </div>
+                    <div class="course-stat">
+                        <span class="label">Energy:</span>
+                        <span class="value">${course.energyCost}</span>
+                    </div>
+                    <div class="course-stat">
+                        <span class="label">Skills:</span>
+                        <span class="value">${course.skillGain}</span>
+                    </div>
+                </div>
+                <button class="enroll-btn">${course.enrolled ? 'Continue' : 'Enroll'}</button>
+            `;
+
+            grid.appendChild(courseCard);
+        });
+    }
+
+    filterCoursesByCategory(category) {
+        // Update active category button
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        const activeBtn = document.querySelector(`[data-category="${category}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+
+        this.displayCourses(category);
+    }
+
+    getCategoryColor(category) {
+        const colors = {
+            combat: '#ff6b35',
+            business: '#4CAF50',
+            technology: '#2196F3',
+            science: '#9C27B0',
+            arts: '#FF9800',
+            sports: '#795548'
+        };
+        return colors[category] || '#666';
+    }
+
+    getCategoryName(category) {
+        const names = {
+            combat: 'Combat & Defense',
+            business: 'Business & Finance',
+            technology: 'Technology',
+            science: 'Science & Medicine',
+            arts: 'Arts & Humanities',
+            sports: 'Sports & Fitness'
+        };
+        return names[category] || category;
+    }
+
+    showCourseModal(course) {
+        const modal = document.getElementById('course-modal');
+        const title = document.getElementById('course-modal-title');
+        const name = document.getElementById('course-name');
+        const desc = document.getElementById('course-description');
+        const duration = document.getElementById('course-duration');
+        const energy = document.getElementById('course-energy');
+        const skill = document.getElementById('course-skill');
+        const prereq = document.getElementById('course-prereq');
+        const enrollBtn = document.querySelector('#course-modal .enroll-btn');
+
+        if (title) title.textContent = course.name;
+        if (name) name.textContent = course.name;
+        if (desc) desc.textContent = course.description;
+        if (duration) duration.textContent = course.duration;
+        if (energy) energy.textContent = course.energyCost.toString();
+        if (skill) skill.textContent = course.skillGain;
+        if (prereq) prereq.textContent = course.prerequisites;
+        if (enrollBtn) enrollBtn.textContent = course.enrolled ? 'Continue Course' : 'Enroll Now';
+
+        // Store current course
+        this.currentCourse = course;
+
+        modal.classList.add('show');
+    }
+
+    closeEducationModal() {
+        const modal = document.getElementById('course-modal');
+        if (modal) {
+            modal.classList.remove('show');
+        }
+    }
+
+    enrollInCourse() {
+        if (!this.currentCourse) return;
+
+        if (game.player.energy < this.currentCourse.energyCost) {
+            game.showNotification('Not enough energy to enroll!', 'error');
+            return;
+        }
+
+        // Handle course enrollment based on existing education system
+        this.handleEducation(this.currentCourse.id);
+
+        // Update course status
+        this.currentCourse.enrolled = true;
+
+        // Refresh courses display
+        const activeCategory = document.querySelector('.category-btn.active').dataset.category;
+        this.displayCourses(activeCategory);
+
+        // Close modal
+        this.closeEducationModal();
+
+        // Show success message
+        game.showNotification(`Enrolled in ${this.currentCourse.name}!`, 'success');
+    }
+
+    loadProgress() {
+        // Load and display progress data
+        this.updateProgressDisplay();
+        this.loadSkillProgress();
+        this.loadRecentActivity();
+    }
+
+    updateProgressDisplay() {
+        const completedCourses = this.courses.filter(c => c.completed).length;
+        const totalCourses = this.courses.length;
+        const percentage = Math.round((completedCourses / totalCourses) * 100);
+
+        // Update overall progress
+        const progressCircle = document.getElementById('overall-progress');
+        const progressText = progressCircle.querySelector('.progress-text');
+        const coursesCompleted = document.getElementById('courses-completed');
+
+        if (progressCircle) {
+            progressCircle.style.setProperty('--progress', `${percentage}deg`);
+        }
+        if (progressText) progressText.textContent = `${percentage}%`;
+        if (coursesCompleted) coursesCompleted.textContent = `${completedCourses} of ${totalCourses} courses completed`;
+
+        // Update study streak and time
+        const streakElement = document.getElementById('study-streak');
+        const timeElement = document.getElementById('total-study-time');
+
+        if (streakElement) streakElement.textContent = (game.player.studyStreak || 0).toString();
+        if (timeElement) timeElement.textContent = (game.player.totalStudyTime || 0).toString();
+    }
+
+    loadSkillProgress() {
+        const skillBars = document.getElementById('skillBars');
+        if (!skillBars) return;
+
+        const skills = [
+            { name: 'Intelligence', value: game.player.intelligence || 100 },
+            { name: 'Strength', value: game.player.strength || 100 },
+            { name: 'Defense', value: game.player.defense || 100 },
+            { name: 'Speed', value: game.player.speed || 100 },
+            { name: 'Dexterity', value: game.player.dexterity || 100 },
+            { name: 'Endurance', value: game.player.endurance || 100 }
+        ];
+
+        skillBars.innerHTML = '';
+
+        skills.forEach(skill => {
+            const skillBar = document.createElement('div');
+            skillBar.className = 'skill-bar';
+            skillBar.innerHTML = `
+                <div class="skill-name">${skill.name}</div>
+                <div class="skill-level">
+                    <div class="skill-fill" style="width: ${Math.min(skill.value, 100)}%"></div>
+                </div>
+            `;
+            skillBars.appendChild(skillBar);
+        });
+    }
+
+    loadRecentActivity() {
+        const activityList = document.getElementById('recentActivity');
+        if (!activityList) return;
+
+        // Mock recent activity data
+        const activities = [
+            {
+                course: 'Combat Training',
+                action: 'Completed course',
+                date: new Date().toLocaleDateString(),
+                time: '2 hours ago'
+            },
+            {
+                course: 'Business Fundamentals',
+                action: 'Enrolled in course',
+                date: new Date().toLocaleDateString(),
+                time: '1 day ago'
+            }
+        ];
+
+        activityList.innerHTML = '';
+
+        activities.forEach(activity => {
+            const activityItem = document.createElement('div');
+            activityItem.className = 'activity-item';
+            activityItem.innerHTML = `
+                <div class="activity-info">
+                    <h5>${activity.course}</h5>
+                    <p>${activity.action}</p>
+                </div>
+                <div class="activity-date">${activity.time}</div>
+            `;
+            activityList.appendChild(activityItem);
+        });
+    }
+
+    loadCertificates() {
+        const gallery = document.getElementById('certificatesGallery');
+        if (!gallery) return;
+
+        // Mock certificates data
+        const certificates = [
+            {
+                course: 'Combat Training',
+                date: '2024-01-15',
+                grade: 'A+'
+            },
+            {
+                course: 'Business Fundamentals',
+                date: '2024-01-10',
+                grade: 'A'
+            }
+        ];
+
+        gallery.innerHTML = '';
+
+        certificates.forEach(cert => {
+            const certCard = document.createElement('div');
+            certCard.className = 'certificate-card';
+            certCard.onclick = () => this.showCertificate(cert);
+            certCard.innerHTML = `
+                <div class="certificate-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h4>${cert.course}</h4>
+                <div class="date">${cert.date}</div>
+                <div class="grade">Grade: ${cert.grade}</div>
+            `;
+            gallery.appendChild(certCard);
+        });
+    }
+
+    showCertificate(certificate) {
+        const modal = document.getElementById('certificate-modal');
+        const studentName = document.getElementById('cert-student-name');
+        const courseName = document.getElementById('cert-course-name');
+        const certDate = document.getElementById('cert-date');
+
+        if (studentName) studentName.textContent = game.player.name || 'Player';
+        if (courseName) courseName.textContent = certificate.course;
+        if (certDate) certDate.textContent = new Date(certificate.date).toLocaleDateString();
+
+        modal.classList.add('show');
+    }
+
+    closeCertificateModal() {
+        const modal = document.getElementById('certificate-modal');
+        if (modal) {
+            modal.classList.remove('show');
+        }
+    }
+
+    filterCertificates(filter) {
+        // Update active filter button
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        const activeBtn = document.querySelector(`[data-filter="${filter}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+
+        // For now, just reload certificates (could be filtered by date/category)
+        this.loadCertificates();
+    }
+
+    downloadCertificate() {
+        game.showNotification('Certificate download feature coming soon!', 'info');
+    }
+
+    shareCertificate() {
+        game.showNotification('Certificate sharing feature coming soon!', 'info');
+    }
+
+    loadLibrary() {
+        const resources = [
+            {
+                title: 'Introduction to Combat',
+                type: 'textbook',
+                category: 'combat',
+                description: 'Comprehensive guide to basic combat techniques and strategies.',
+                author: 'Master Instructor',
+                pages: 150
+            },
+            {
+                title: 'Business Strategy 101',
+                type: 'video',
+                category: 'business',
+                description: 'Video series on fundamental business strategies and market analysis.',
+                author: 'Business Expert',
+                duration: '45 min'
+            },
+            {
+                title: 'Programming Fundamentals',
+                type: 'article',
+                category: 'technology',
+                description: 'Essential concepts in computer programming and software development.',
+                author: 'Tech Guru',
+                readTime: '15 min'
+            },
+            {
+                title: 'Human Anatomy',
+                type: 'research',
+                category: 'science',
+                description: 'Detailed study of human physiological systems and anatomy.',
+                author: 'Dr. Science',
+                pages: 300
+            }
+        ];
+
+        this.libraryResources = resources;
+        this.displayLibraryResources('all');
+    }
+
+    displayLibraryResources(category) {
+        const container = document.getElementById('libraryResources');
+        if (!container) return;
+
+        let filteredResources = this.libraryResources;
+        if (category !== 'all') {
+            filteredResources = this.libraryResources.filter(r => r.category === category);
+        }
+
+        container.innerHTML = '';
+
+        filteredResources.forEach(resource => {
+            const resourceCard = document.createElement('div');
+            resourceCard.className = 'resource-card';
+            resourceCard.onclick = () => this.openResource(resource);
+            resourceCard.innerHTML = `
+                <div class="resource-icon">
+                    <i class="fas ${this.getResourceIcon(resource.type)}"></i>
+                </div>
+                <h4>${resource.title}</h4>
+                <div class="type">${resource.type}</div>
+                <p>${resource.description}</p>
+                <div class="resource-meta">
+                    <span>${resource.author}</span>
+                    <span>${resource.pages || resource.duration || resource.readTime}</span>
+                </div>
+            `;
+            container.appendChild(resourceCard);
+        });
+    }
+
+    getResourceIcon(type) {
+        const icons = {
+            textbook: 'fa-book',
+            video: 'fa-video',
+            article: 'fa-newspaper',
+            research: 'fa-microscope'
+        };
+        return icons[type] || 'fa-book';
+    }
+
+    filterLibraryByCategory(category) {
+        // Update active category button
+        document.querySelectorAll('.lib-category-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        const activeBtn = document.querySelector(`[data-category="${category}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+
+        this.displayLibraryResources(category);
+    }
+
+    searchLibrary(query) {
+        const container = document.getElementById('libraryResources');
+        if (!container) return;
+
+        if (!query.trim()) {
+            this.displayLibraryResources('all');
+            return;
+        }
+
+        const filtered = this.libraryResources.filter(resource =>
+            resource.title.toLowerCase().includes(query.toLowerCase()) ||
+            resource.description.toLowerCase().includes(query.toLowerCase()) ||
+            resource.author.toLowerCase().includes(query.toLowerCase())
+        );
+
+        container.innerHTML = '';
+
+        filtered.forEach(resource => {
+            const resourceCard = document.createElement('div');
+            resourceCard.className = 'resource-card';
+            resourceCard.onclick = () => this.openResource(resource);
+            resourceCard.innerHTML = `
+                <div class="resource-icon">
+                    <i class="fas ${this.getResourceIcon(resource.type)}"></i>
+                </div>
+                <h4>${resource.title}</h4>
+                <div class="type">${resource.type}</div>
+                <p>${resource.description}</p>
+                <div class="resource-meta">
+                    <span>${resource.author}</span>
+                    <span>${resource.pages || resource.duration || resource.readTime}</span>
+                </div>
+            `;
+            container.appendChild(resourceCard);
+        });
+    }
+
+    openResource(resource) {
+        const modal = document.getElementById('reading-modal');
+        const title = document.getElementById('reading-title');
+
+        if (title) title.textContent = resource.title;
+
+        // Mock reading content
+        const content = `This is a comprehensive ${resource.type} about ${resource.title.toLowerCase()}.
+
+        ${this.getResourceContent(resource)}
+
+        This educational resource provides valuable knowledge and insights into the subject matter. Study diligently to improve your skills and understanding.
+
+        Remember: Education is the key to success in Crime City!`;
+
+        const textElement = document.getElementById('readingText');
+        if (textElement) textElement.textContent = content;
+
+        // Initialize reading progress
+        this.currentPage = 1;
+        this.totalPages = 10;
+        this.updateReadingProgress();
+
+        modal.classList.add('show');
+    }
+
+    getResourceContent(resource) {
+        const contents = {
+            textbook: 'This textbook covers fundamental concepts, practical applications, and advanced techniques in the field.',
+            video: 'This video tutorial demonstrates step-by-step procedures and provides visual explanations of complex topics.',
+            article: 'This scholarly article presents research findings, analysis, and theoretical frameworks related to the subject.',
+            research: 'This research paper contains detailed methodology, experimental results, and comprehensive conclusions.'
+        };
+        return contents[resource.type] || 'This resource contains valuable educational content.';
+    }
+
+    updateReadingProgress() {
+        const percentage = Math.round((this.currentPage / this.totalPages) * 100);
+        const progressFill = document.getElementById('reading-progress-fill');
+        const percentageText = document.getElementById('reading-percentage');
+        const currentPageEl = document.getElementById('current-page');
+        const totalPagesEl = document.getElementById('total-pages');
+
+        if (progressFill) progressFill.style.width = `${percentage}%`;
+        if (percentageText) percentageText.textContent = `${percentage}%`;
+        if (currentPageEl) currentPageEl.textContent = this.currentPage.toString();
+        if (totalPagesEl) totalPagesEl.textContent = this.totalPages.toString();
+    }
+
+    previousPage() {
+        if (this.currentPage > 1) {
+            this.currentPage--;
+            this.updateReadingProgress();
+        }
+    }
+
+    nextPage() {
+        if (this.currentPage < this.totalPages) {
+            this.currentPage++;
+            this.updateReadingProgress();
+        } else {
+            // Finished reading
+            game.showNotification('Reading completed! Knowledge gained!', 'success');
+            this.closeReadingModal();
+        }
+    }
+
+    closeReadingModal() {
+        const modal = document.getElementById('reading-modal');
+        if (modal) {
+            modal.classList.remove('show');
+        }
     }
 
     handleEducation(course) {

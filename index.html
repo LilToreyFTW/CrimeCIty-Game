@@ -1397,6 +1397,57 @@
             
             <!-- Courses Tab -->
             <div id="courses" class="education-tab active">
+                <!-- Course Categories Sub-tabs -->
+                <div class="course-categories">
+                    <button class="category-btn active" data-category="all">All Courses</button>
+                    <button class="category-btn" data-category="combat">Combat & Defense</button>
+                    <button class="category-btn" data-category="business">Business & Finance</button>
+                    <button class="category-btn" data-category="technology">Technology</button>
+                    <button class="category-btn" data-category="science">Science & Medicine</button>
+                    <button class="category-btn" data-category="arts">Arts & Humanities</button>
+                    <button class="category-btn" data-category="sports">Sports & Fitness</button>
+                </div>
+
+                <!-- Course Enrollment Modal -->
+                <div id="course-modal" class="modal education-modal">
+                    <div class="modal-content education-modal-content">
+                        <div class="modal-header">
+                            <h3 id="course-modal-title">Course Details</h3>
+                            <button class="close-modal" onclick="closeEducationModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="course-details">
+                                <div class="course-info">
+                                    <h4 id="course-name">Course Name</h4>
+                                    <p id="course-description">Course description</p>
+                                    <div class="course-stats">
+                                        <div class="stat">
+                                            <label>Duration:</label>
+                                            <span id="course-duration">1 hour</span>
+                                        </div>
+                                        <div class="stat">
+                                            <label>Energy Cost:</label>
+                                            <span id="course-energy">20</span>
+                                        </div>
+                                        <div class="stat">
+                                            <label>Skill Gain:</label>
+                                            <span id="course-skill">+5 Intelligence</span>
+                                        </div>
+                                        <div class="stat">
+                                            <label>Prerequisites:</label>
+                                            <span id="course-prereq">None</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="course-actions">
+                                    <button class="enroll-btn" onclick="enrollInCourse()">Enroll Now</button>
+                                    <button class="cancel-btn" onclick="closeEducationModal()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <h3>Available Courses</h3>
                 <div class="courses-grid" id="coursesGrid">
                     <!-- Courses will be populated by JavaScript -->
@@ -1406,24 +1457,172 @@
             <!-- Progress Tab -->
             <div id="progress" class="education-tab">
                 <h3>My Education Progress</h3>
-                <div class="progress-content" id="progressContent">
-                    <!-- Progress will be populated by JavaScript -->
+
+                <!-- Progress Summary -->
+                <div class="progress-summary">
+                    <div class="summary-card">
+                        <h4>Overall Progress</h4>
+                        <div class="progress-circle" id="overall-progress">
+                            <span class="progress-text">0%</span>
+                        </div>
+                        <p id="courses-completed">0 of 12 courses completed</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Study Streak</h4>
+                        <div class="streak-counter">
+                            <i class="fas fa-fire"></i>
+                            <span id="study-streak">0</span> days
+                        </div>
+                        <p>Keep studying daily!</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Total Study Time</h4>
+                        <div class="time-counter">
+                            <i class="fas fa-clock"></i>
+                            <span id="total-study-time">0</span> hours
+                        </div>
+                        <p>Time invested in learning</p>
+                    </div>
+                </div>
+
+                <!-- Skill Progress -->
+                <div class="skill-progress">
+                    <h4>Skill Development</h4>
+                    <div class="skill-bars" id="skillBars">
+                        <!-- Skill progress bars will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Recent Courses -->
+                <div class="recent-courses">
+                    <h4>Recent Course Activity</h4>
+                    <div class="activity-list" id="recentActivity">
+                        <!-- Recent activity will be populated by JavaScript -->
+                    </div>
                 </div>
             </div>
-            
+
             <!-- Certificates Tab -->
             <div id="certificates" class="education-tab">
                 <h3>My Certificates</h3>
-                <div class="certificates-content" id="certificatesContent">
+
+                <!-- Certificate Filters -->
+                <div class="certificate-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="recent">Recent</button>
+                    <button class="filter-btn" data-filter="category">By Category</button>
+                </div>
+
+                <!-- Certificate Gallery -->
+                <div class="certificates-gallery" id="certificatesGallery">
                     <!-- Certificates will be populated by JavaScript -->
                 </div>
+
+                <!-- Certificate Modal -->
+                <div id="certificate-modal" class="modal education-modal">
+                    <div class="modal-content certificate-modal-content">
+                        <div class="modal-header">
+                            <h3>Certificate of Completion</h3>
+                            <button class="close-modal" onclick="closeCertificateModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="certificate-display">
+                                <div class="certificate-paper">
+                                    <div class="certificate-header">
+                                        <h2>Certificate of Completion</h2>
+                                        <div class="certificate-seal">
+                                            <i class="fas fa-graduation-cap"></i>
+                                        </div>
+                                    </div>
+                                    <div class="certificate-body">
+                                        <p>This certifies that</p>
+                                        <h3 id="cert-student-name">Player Name</h3>
+                                        <p>has successfully completed the course</p>
+                                        <h4 id="cert-course-name">Course Name</h4>
+                                        <p>with distinction</p>
+                                        <div class="certificate-date">
+                                            <p>Completed on <span id="cert-date">Date</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="certificate-footer">
+                                        <div class="signature">
+                                            <p>Education Director</p>
+                                            <div class="signature-line"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="certificate-actions">
+                                    <button class="download-btn" onclick="downloadCertificate()">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                    <button class="share-btn" onclick="shareCertificate()">
+                                        <i class="fas fa-share"></i> Share
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
+
             <!-- Library Tab -->
             <div id="library" class="education-tab">
                 <h3>Education Library</h3>
-                <div class="library-content" id="libraryContent">
-                    <!-- Library content will be populated by JavaScript -->
+
+                <!-- Library Search -->
+                <div class="library-search">
+                    <input type="text" id="librarySearch" placeholder="Search books, articles, resources..." class="search-input">
+                    <button class="search-btn" onclick="searchLibrary()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+
+                <!-- Library Categories -->
+                <div class="library-categories">
+                    <button class="lib-category-btn active" data-category="all">All Resources</button>
+                    <button class="lib-category-btn" data-category="textbooks">Textbooks</button>
+                    <button class="lib-category-btn" data-category="articles">Articles</button>
+                    <button class="lib-category-btn" data-category="videos">Videos</button>
+                    <button class="lib-category-btn" data-category="research">Research</button>
+                </div>
+
+                <!-- Library Content -->
+                <div class="library-resources" id="libraryResources">
+                    <!-- Library resources will be populated by JavaScript -->
+                </div>
+
+                <!-- Reading Progress Modal -->
+                <div id="reading-modal" class="modal education-modal">
+                    <div class="modal-content reading-modal-content">
+                        <div class="modal-header">
+                            <h3 id="reading-title">Reading Material</h3>
+                            <button class="close-modal" onclick="closeReadingModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="reading-content">
+                                <div class="reading-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="reading-progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <span id="reading-percentage">0%</span>
+                                </div>
+                                <div class="reading-text" id="readingText">
+                                    <!-- Reading content will be loaded here -->
+                                </div>
+                                <div class="reading-controls">
+                                    <button class="reading-btn" onclick="previousPage()">
+                                        <i class="fas fa-chevron-left"></i> Previous
+                                    </button>
+                                    <button class="reading-btn" onclick="nextPage()">
+                                        Next <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                    <div class="page-info">
+                                        <span id="current-page">1</span> / <span id="total-pages">10</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
