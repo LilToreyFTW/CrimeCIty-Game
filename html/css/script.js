@@ -899,7 +899,7 @@ class GameActions {
         document.querySelectorAll('.casino-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const game = e.currentTarget.dataset.game;
-                this.handleCasino(game);
+                this.openCasinoModal(game);
             });
         });
 
@@ -1365,6 +1365,1378 @@ class GameActions {
         if (games[gameType]) {
             games[gameType]();
         }
+    }
+
+    // Casino Modal Functions
+    openCasinoModal(gameType) {
+        const modalId = `${gameType}-modal`;
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('show');
+            this.initializeCasinoGame(gameType);
+        }
+    }
+
+    closeCasinoModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('show');
+        }
+    }
+
+    initializeCasinoGame(gameType) {
+        // Update casino balance display
+        const balanceElement = document.getElementById('casino-balance');
+        if (balanceElement && game.player) {
+            balanceElement.textContent = game.player.money.toLocaleString();
+        }
+
+        switch (gameType) {
+            case 'slots':
+                this.initializeSlots();
+                break;
+            case 'blackjack':
+                this.initializeBlackjack();
+                break;
+            case 'roulette':
+                this.initializeRoulette();
+                break;
+            case 'poker':
+                this.initializePoker();
+                break;
+            case 'craps':
+                this.initializeCraps();
+                break;
+            case 'keno':
+                this.initializeKeno();
+                break;
+            case 'highlow':
+                this.initializeHighLow();
+                break;
+            case 'lottery':
+                this.initializeLottery();
+                break;
+            case 'russian-roulette':
+                this.initializeRussianRoulette();
+                break;
+            case 'spin-wheel':
+                this.initializeSpinWheel();
+                break;
+        }
+    }
+
+    // Slots Game
+    initializeSlots() {
+        // Generate random symbols for reels
+        const symbols = ['🍒', '🍋', '🍊', '⭐', '💎', '7️⃣'];
+        for (let i = 1; i <= 3; i++) {
+            const reel = document.getElementById(`reel${i}`);
+            if (reel) {
+                const symbolElements = reel.querySelectorAll('.symbol');
+                symbolElements.forEach((symbol, index) => {
+                    symbol.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                    symbol.style.top = `${index * 20}px`;
+                });
+            }
+        }
+    }
+
+    spinSlots() {
+        const betInput = document.getElementById('slots-bet');
+        const betAmount = parseInt(betInput.value) || 50;
+
+        if (game.player.money < betAmount) {
+            game.showNotification('Not enough money!', 'error');
+            return;
+        }
+
+        if (!game.spendMoney(betAmount)) return;
+
+        // Disable spin button
+        const spinBtn = document.querySelector('.spin-btn');
+        spinBtn.disabled = true;
+        spinBtn.textContent = 'Spinning...';
+
+        // Animate reels
+        const symbols = ['🍒', '🍋', '🍊', '⭐', '💎', '7️⃣'];
+        const results = [];
+
+        for (let i = 1; i <= 3; i++) {
+            const reel = document.getElementById(`reel${i}`);
+            const result = symbols[Math.floor(Math.random() * symbols.length)];
+            results.push(result);
+
+            if (reel) {
+                const symbolElements = reel.querySelectorAll('.symbol');
+                symbolElements.forEach((symbol, index) => {
+                    symbol.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                });
+            }
+        }
+
+        setTimeout(() => {
+            // Show final results
+            for (let i = 1; i <= 3; i++) {
+                const reel = document.getElementById(`reel${i}`);
+                if (reel) {
+                    const symbolElements = reel.querySelectorAll('.symbol');
+                    symbolElements.forEach((symbol, index) => {
+                        if (index === 2) { // Middle symbol
+                            symbol.textContent = results[i-1];
+                        } else {
+                            symbol.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                        }
+                    });
+                }
+            }
+
+            // Calculate winnings
+            let winnings = 0;
+            const [reel1, reel2, reel3] = results;
+
+            if (reel1 === reel2 && reel2 === reel3) {
+                switch (reel1) {
+                    case '🍒': winnings = betAmount * 5; break;
+                    case '⭐': winnings = betAmount * 10; break;
+                    case '💎': winnings = betAmount * 20; break;
+                    case '7️⃣': winnings = betAmount * 50; break;
+                    default: winnings = betAmount * 3;
+                }
+                game.addMoney(winnings);
+                game.showNotification(`JACKPOT! Won $${winnings.toLocaleString()}!`, 'success');
+            } else {
+                game.showNotification('Better luck next time!', 'info');
+            }
+
+            // Update balance and re-enable button
+            const balanceElement = document.getElementById('casino-balance');
+            if (balanceElement) {
+                balanceElement.textContent = game.player.money.toLocaleString();
+            }
+
+            spinBtn.disabled = false;
+            spinBtn.innerHTML = '<i class="fas fa-play"></i> Spin ($<span id="slots-cost">' + (parseInt(betInput.value) || 50) + '</span>)';
+        }, 2000);
+    }
+
+    // Blackjack Game
+    initializeBlackjack() {
+        this.blackjackDeck = this.createDeck();
+        this.shuffleDeck();
+        this.blackjackDealerCards = [];
+        this.blackjackPlayerCards = [];
+        this.gameInProgress = false;
+    }
+
+    createDeck() {
+        const suits = ['♠', '♥', '♦', '♣'];
+        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        const deck = [];
+
+        for (const suit of suits) {
+            for (const value of values) {
+                deck.push({ suit, value });
+            }
+        }
+
+        return deck;
+    }
+
+    shuffleDeck() {
+        for (let i = this.blackjackDeck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.blackjackDeck[i], this.blackjackDeck[j]] = [this.blackjackDeck[j], this.blackjackDeck[i]];
+        }
+    }
+
+    dealBlackjack() {
+        const betInput = document.getElementById('blackjack-bet');
+        const betAmount = parseInt(betInput.value) || 50;
+
+        if (game.player.money < betAmount) {
+            game.showNotification('Not enough money!', 'error');
+            return;
+        }
+
+        if (!game.spendMoney(betAmount)) return;
+
+        this.blackjackBet = betAmount;
+        this.gameInProgress = true;
+
+        // Reset cards
+        this.blackjackDealerCards = [];
+        this.blackjackPlayerCards = [];
+
+        // Deal initial cards
+        this.blackjackPlayerCards.push(this.drawCard());
+        this.blackjackDealerCards.push(this.drawCard());
+        this.blackjackPlayerCards.push(this.drawCard());
+        this.blackjackDealerCards.push(this.drawCard());
+
+        this.updateBlackjackDisplay();
+
+        // Enable action buttons
+        document.getElementById('deal-btn').disabled = true;
+        document.getElementById('hit-btn').disabled = false;
+        document.getElementById('stand-btn').disabled = false;
+        document.getElementById('double-btn').disabled = false;
+    }
+
+    drawCard() {
+        return this.blackjackDeck.pop();
+    }
+
+    getCardValue(card) {
+        if (['J', 'Q', 'K'].includes(card.value)) return 10;
+        if (card.value === 'A') return 11;
+        return parseInt(card.value);
+    }
+
+    calculateHandValue(cards) {
+        let value = 0;
+        let aces = 0;
+
+        for (const card of cards) {
+            if (card.value === 'A') {
+                aces++;
+                value += 11;
+            } else {
+                value += this.getCardValue(card);
+            }
+        }
+
+        // Handle aces
+        while (value > 21 && aces > 0) {
+            value -= 10;
+            aces--;
+        }
+
+        return value;
+    }
+
+    updateBlackjackDisplay() {
+        // Update dealer cards (show one face down)
+        const dealerContainer = document.getElementById('dealer-cards');
+        dealerContainer.innerHTML = '';
+
+        this.blackjackDealerCards.forEach((card, index) => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            if (index === 1 && this.gameInProgress) {
+                cardDiv.textContent = '🂠'; // Face down
+            } else {
+                cardDiv.textContent = card.value + card.suit;
+                if (card.suit === '♥' || card.suit === '♦') {
+                    cardDiv.style.color = '#ff6b35';
+                }
+            }
+            dealerContainer.appendChild(cardDiv);
+        });
+
+        // Update dealer value
+        const dealerValue = this.gameInProgress ?
+            this.getCardValue(this.blackjackDealerCards[0]) :
+            this.calculateHandValue(this.blackjackDealerCards);
+        document.getElementById('dealer-value').textContent = dealerValue.toString();
+
+        // Update player cards
+        const playerContainer = document.getElementById('player-cards');
+        playerContainer.innerHTML = '';
+
+        this.blackjackPlayerCards.forEach(card => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            cardDiv.textContent = card.value + card.suit;
+            if (card.suit === '♥' || card.suit === '♦') {
+                cardDiv.style.color = '#ff6b35';
+            }
+            playerContainer.appendChild(cardDiv);
+        });
+
+        // Update player value
+        const playerValue = this.calculateHandValue(this.blackjackPlayerCards);
+        document.getElementById('player-value').textContent = playerValue.toString();
+
+        // Check for automatic outcomes
+        if (playerValue === 21 && this.blackjackPlayerCards.length === 2) {
+            this.endBlackjackGame('blackjack');
+        } else if (playerValue > 21) {
+            this.endBlackjackGame('bust');
+        }
+    }
+
+    hitBlackjack() {
+        this.blackjackPlayerCards.push(this.drawCard());
+        this.updateBlackjackDisplay();
+    }
+
+    standBlackjack() {
+        this.gameInProgress = false;
+        this.dealerTurn();
+    }
+
+    doubleDownBlackjack() {
+        if (game.player.money < this.blackjackBet) {
+            game.showNotification('Not enough money to double down!', 'error');
+            return;
+        }
+
+        if (!game.spendMoney(this.blackjackBet)) return;
+        this.blackjackBet *= 2;
+
+        this.blackjackPlayerCards.push(this.drawCard());
+        this.updateBlackjackDisplay();
+
+        if (this.calculateHandValue(this.blackjackPlayerCards) <= 21) {
+            this.standBlackjack();
+        }
+    }
+
+    dealerTurn() {
+        while (this.calculateHandValue(this.blackjackDealerCards) < 17) {
+            this.blackjackDealerCards.push(this.drawCard());
+        }
+
+        this.updateBlackjackDisplay();
+
+        const playerValue = this.calculateHandValue(this.blackjackPlayerCards);
+        const dealerValue = this.calculateHandValue(this.blackjackDealerCards);
+
+        if (dealerValue > 21 || playerValue > dealerValue) {
+            this.endBlackjackGame('win');
+        } else if (dealerValue > playerValue) {
+            this.endBlackjackGame('lose');
+        } else {
+            this.endBlackjackGame('push');
+        }
+    }
+
+    endBlackjackGame(result) {
+        this.gameInProgress = false;
+
+        // Disable action buttons
+        document.getElementById('hit-btn').disabled = true;
+        document.getElementById('stand-btn').disabled = true;
+        document.getElementById('double-btn').disabled = true;
+        document.getElementById('deal-btn').disabled = false;
+
+        let message = '';
+        let winnings = 0;
+
+        switch (result) {
+            case 'blackjack':
+                winnings = Math.floor(this.blackjackBet * 2.5);
+                message = `Blackjack! You win $${winnings.toLocaleString()}!`;
+                game.addMoney(winnings);
+                break;
+            case 'win':
+                winnings = this.blackjackBet * 2;
+                message = `You win! +$${winnings.toLocaleString()}`;
+                game.addMoney(winnings);
+                break;
+            case 'lose':
+                message = `Dealer wins. You lose $${this.blackjackBet.toLocaleString()}.`;
+                break;
+            case 'push':
+                winnings = this.blackjackBet;
+                message = `Push! Your bet is returned.`;
+                game.addMoney(winnings);
+                break;
+            case 'bust':
+                message = `Bust! You lose $${this.blackjackBet.toLocaleString()}.`;
+                break;
+        }
+
+        document.getElementById('blackjack-status').textContent = message;
+
+        // Update balance
+        const balanceElement = document.getElementById('casino-balance');
+        if (balanceElement) {
+            balanceElement.textContent = game.player.money.toLocaleString();
+        }
+
+        if (winnings > 0) {
+            game.showNotification(message, 'success');
+        } else {
+            game.showNotification(message, 'error');
+        }
+    }
+
+    // Roulette Game
+    initializeRoulette() {
+        this.rouletteBets = [];
+        this.updateRouletteBetsDisplay();
+    }
+
+    placeRouletteBet(type, payout) {
+        const betAmount = 50; // Fixed bet for simplicity
+
+        if (game.player.money < betAmount) {
+            game.showNotification('Not enough money!', 'error');
+            return;
+        }
+
+        if (!game.spendMoney(betAmount)) return;
+
+        this.rouletteBets.push({ type, amount: betAmount, payout });
+
+        // Update display
+        const betsList = document.getElementById('bets-list');
+        if (betsList) {
+            betsList.innerHTML = this.rouletteBets.map(bet =>
+                `<div>${bet.type.toUpperCase()}: $${bet.amount} (${bet.payout}:1)</div>`
+            ).join('');
+        }
+
+        const balanceElement = document.getElementById('casino-balance');
+        if (balanceElement) {
+            balanceElement.textContent = game.player.money.toLocaleString();
+        }
+    }
+
+    clearRouletteBets() {
+        // Refund all bets
+        const totalRefund = this.rouletteBets.reduce((sum, bet) => sum + bet.amount, 0);
+        game.addMoney(totalRefund);
+
+        this.rouletteBets = [];
+        const betsList = document.getElementById('bets-list');
+        if (betsList) {
+            betsList.textContent = 'No bets placed';
+        }
+
+        const balanceElement = document.getElementById('casino-balance');
+        if (balanceElement) {
+            balanceElement.textContent = game.player.money.toLocaleString();
+        }
+    }
+
+    spinRoulette() {
+        if (this.rouletteBets.length === 0) {
+            game.showNotification('Place some bets first!', 'warning');
+            return;
+        }
+
+        const spinBtn = document.querySelector('.spin-btn');
+        const clearBtn = document.querySelector('.clear-btn');
+
+        spinBtn.disabled = true;
+        clearBtn.disabled = true;
+
+        // Animate wheel
+        const wheel = document.getElementById('roulette-wheel');
+        const ball = document.getElementById('roulette-ball');
+
+        const result = Math.floor(Math.random() * 37); // 0-36
+        const rotation = 360 * 5 + (result * 9.73); // 5 full rotations + result position
+
+        wheel.style.setProperty('--rotation', `${rotation}deg`);
+        wheel.classList.add('spinning');
+
+        setTimeout(() => {
+            wheel.classList.remove('spinning');
+
+            // Calculate winnings
+            let totalWinnings = 0;
+
+            this.rouletteBets.forEach(bet => {
+                let won = false;
+
+                switch (bet.type) {
+                    case 'red':
+                        won = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36].includes(result);
+                        break;
+                    case 'black':
+                        won = [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35].includes(result);
+                        break;
+                    case 'even':
+                        won = result !== 0 && result % 2 === 0;
+                        break;
+                    case 'odd':
+                        won = result % 2 === 1;
+                        break;
+                }
+
+                if (won) {
+                    const winnings = bet.amount * bet.payout;
+                    totalWinnings += winnings;
+                }
+            });
+
+            if (totalWinnings > 0) {
+                game.addMoney(totalWinnings);
+                game.showNotification(`Roulette win! +$${totalWinnings.toLocaleString()}`, 'success');
+            } else {
+                game.showNotification(`Roulette: ${result} - All bets lost!`, 'error');
+            }
+
+            // Clear bets and update display
+            this.rouletteBets = [];
+            const betsList = document.getElementById('bets-list');
+            if (betsList) {
+                betsList.textContent = 'No bets placed';
+            }
+
+            const balanceElement = document.getElementById('casino-balance');
+            if (balanceElement) {
+                balanceElement.textContent = game.player.money.toLocaleString();
+            }
+
+            const statusElement = document.getElementById('roulette-status');
+            if (statusElement) {
+                statusElement.textContent = `Ball landed on ${result}`;
+            }
+
+            spinBtn.disabled = false;
+            clearBtn.disabled = false;
+        }, 3000);
+    }
+
+    updateRouletteBetsDisplay() {
+        const betsList = document.getElementById('bets-list');
+        if (betsList) {
+            betsList.textContent = 'No bets placed';
+        }
+    }
+
+    // Poker Game
+    initializePoker() {
+        this.pokerDeck = this.createDeck();
+        this.shuffleDeck();
+        this.pokerPot = 0;
+        this.currentBet = 0;
+        this.playerChips = 1000;
+        this.dealerChips = 1000;
+    }
+
+    dealPoker() {
+        const betAmount = parseInt(document.getElementById('poker-bet').value) || 50;
+
+        if (this.playerChips < betAmount) {
+            game.showNotification('Not enough chips!', 'error');
+            return;
+        }
+
+        // Reset game
+        this.pokerDeck = this.createDeck();
+        this.shuffleDeck();
+        this.pokerPot = 0;
+        this.currentBet = betAmount;
+
+        // Deal hole cards
+        this.playerHand = [this.drawCard(), this.drawCard()];
+        this.dealerHand = [this.drawCard(), this.drawCard()];
+
+        // Deal community cards
+        this.communityCards = [
+            this.drawCard(),
+            this.drawCard(),
+            this.drawCard(),
+            this.drawCard(),
+            this.drawCard()
+        ];
+
+        // Place initial bets
+        this.playerChips -= betAmount;
+        this.dealerChips -= betAmount;
+        this.pokerPot += betAmount * 2;
+
+        this.updatePokerDisplay();
+        this.updatePokerButtons();
+
+        // Dealer's turn (simple AI)
+        if (Math.random() < 0.7) { // 70% chance to call
+            this.callPoker();
+        } else {
+            this.foldPoker();
+        }
+    }
+
+    updatePokerDisplay() {
+        // Update community cards
+        const communityContainer = document.getElementById('community-cards');
+        communityContainer.innerHTML = '';
+
+        this.communityCards.forEach(card => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            cardDiv.textContent = card.value + card.suit;
+            if (card.suit === '♥' || card.suit === '♦') {
+                cardDiv.style.color = '#ff6b35';
+            }
+            communityContainer.appendChild(cardDiv);
+        });
+
+        // Update player hand
+        const playerContainer = document.getElementById('poker-hand');
+        playerContainer.innerHTML = '';
+
+        this.playerHand.forEach(card => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            cardDiv.textContent = card.value + card.suit;
+            if (card.suit === '♥' || card.suit === '♦') {
+                cardDiv.style.color = '#ff6b35';
+            }
+            playerContainer.appendChild(cardDiv);
+        });
+
+        // Update hand rank
+        const handRank = this.evaluatePokerHand([...this.playerHand, ...this.communityCards]);
+        document.getElementById('hand-rank').textContent = handRank;
+
+        // Update pot and current bet
+        document.getElementById('poker-pot').textContent = this.pokerPot.toString();
+        document.getElementById('current-bet').textContent = this.currentBet.toString();
+    }
+
+    foldPoker() {
+        // Dealer wins
+        this.dealerChips += this.pokerPot;
+        this.pokerPot = 0;
+
+        document.getElementById('poker-status').textContent = 'You folded. Dealer wins!';
+        this.endPokerGame();
+    }
+
+    callPoker() {
+        const callAmount = this.currentBet;
+
+        if (this.playerChips >= callAmount) {
+            this.playerChips -= callAmount;
+            this.pokerPot += callAmount;
+
+            // Dealer calls too
+            this.dealerChips -= callAmount;
+            this.pokerPot += callAmount;
+
+            // Showdown
+            const playerRank = this.getHandValue([...this.playerHand, ...this.communityCards]);
+            const dealerRank = this.getHandValue([...this.dealerHand, ...this.communityCards]);
+
+            if (playerRank > dealerRank) {
+                this.playerChips += this.pokerPot;
+                document.getElementById('poker-status').textContent = 'You win the hand!';
+                game.addMoney(this.pokerPot);
+            } else if (dealerRank > playerRank) {
+                this.dealerChips += this.pokerPot;
+                document.getElementById('poker-status').textContent = 'Dealer wins the hand.';
+            } else {
+                // Split pot
+                const split = Math.floor(this.pokerPot / 2);
+                this.playerChips += split;
+                this.dealerChips += split;
+                document.getElementById('poker-status').textContent = 'Split pot!';
+                game.addMoney(split);
+            }
+
+            this.pokerPot = 0;
+            this.endPokerGame();
+        } else {
+            game.showNotification('Not enough chips to call!', 'error');
+        }
+    }
+
+    raisePoker() {
+        const raiseAmount = parseInt(document.getElementById('poker-bet').value) || 50;
+
+        if (this.playerChips >= raiseAmount) {
+            this.playerChips -= raiseAmount;
+            this.pokerPot += raiseAmount;
+            this.currentBet += raiseAmount;
+
+            // Dealer may re-raise or call
+            if (Math.random() < 0.5 && this.dealerChips >= raiseAmount) {
+                this.dealerChips -= raiseAmount;
+                this.pokerPot += raiseAmount;
+                document.getElementById('poker-status').textContent = 'Dealer re-raises!';
+            } else {
+                document.getElementById('poker-status').textContent = 'Dealer calls.';
+            }
+
+            this.updatePokerDisplay();
+        } else {
+            game.showNotification('Not enough chips to raise!', 'error');
+        }
+    }
+
+    endPokerGame() {
+        // Reset for next hand
+        setTimeout(() => {
+            document.getElementById('poker-status').textContent = '';
+            this.updatePokerButtons();
+        }, 3000);
+    }
+
+    updatePokerButtons() {
+        const dealBtn = document.getElementById('deal-poker-btn');
+        const foldBtn = document.getElementById('fold-btn');
+        const callBtn = document.getElementById('call-btn');
+        const raiseBtn = document.getElementById('raise-btn');
+
+        dealBtn.disabled = this.pokerPot > 0;
+        foldBtn.disabled = this.pokerPot === 0;
+        callBtn.disabled = this.pokerPot === 0;
+        raiseBtn.disabled = this.pokerPot === 0;
+    }
+
+    evaluatePokerHand(cards) {
+        const handValue = this.getHandValue(cards);
+        // Simplified hand ranking
+        const rankings = [
+            'High Card', 'Pair', 'Two Pair', 'Three of a Kind',
+            'Straight', 'Flush', 'Full House', 'Four of a Kind',
+            'Straight Flush', 'Royal Flush'
+        ];
+        return rankings[Math.min(handValue, rankings.length - 1)];
+    }
+
+    getHandValue(cards) {
+        // Simplified hand evaluation - just return a score
+        return Math.floor(Math.random() * 10);
+    }
+
+    // Craps Game
+    initializeCraps() {
+        this.crapsPoint = null;
+        this.crapsBets = [];
+        this.updateCrapsDisplay();
+    }
+
+    placeCrapsBet(type) {
+        const betAmount = parseInt(document.getElementById('craps-bet').value) || 50;
+
+        if (game.player.money < betAmount) {
+            game.showNotification('Not enough money!', 'error');
+            return;
+        }
+
+        if (!game.spendMoney(betAmount)) return;
+
+        this.crapsBets.push({ type, amount: betAmount });
+        this.updateCrapsBetsDisplay();
+    }
+
+    rollDice() {
+        const die1 = Math.floor(Math.random() * 6) + 1;
+        const die2 = Math.floor(Math.random() * 6) + 1;
+        const sum = die1 + die2;
+
+        // Update dice display
+        document.getElementById('die1').textContent = this.getDieSymbol(die1);
+        document.getElementById('die2').textContent = this.getDieSymbol(die2);
+        document.getElementById('last-roll').textContent = sum.toString();
+
+        // Add rolling animation
+        document.getElementById('die1').classList.add('rolling');
+        document.getElementById('die2').classList.add('rolling');
+
+        setTimeout(() => {
+            document.getElementById('die1').classList.remove('rolling');
+            document.getElementById('die2').classList.remove('rolling');
+        }, 500);
+
+        // Process bets
+        let totalWinnings = 0;
+
+        this.crapsBets.forEach(bet => {
+            let won = false;
+            let payout = 0;
+
+            switch (bet.type) {
+                case 'pass':
+                    if (!this.crapsPoint) {
+                        // Come out roll
+                        if ([7, 11].includes(sum)) {
+                            won = true;
+                            payout = 1;
+                        } else if ([2, 3, 12].includes(sum)) {
+                            won = false;
+                        } else {
+                            this.crapsPoint = sum;
+                            document.getElementById('point-number').textContent = sum.toString();
+                        }
+                    } else {
+                        // Point established
+                        if (sum === this.crapsPoint) {
+                            won = true;
+                            payout = 1;
+                            this.crapsPoint = null;
+                            document.getElementById('point-number').textContent = 'Off';
+                        } else if (sum === 7) {
+                            won = false;
+                            this.crapsPoint = null;
+                            document.getElementById('point-number').textContent = 'Off';
+                        }
+                    }
+                    break;
+                case 'dont_pass':
+                    if (!this.crapsPoint) {
+                        if ([2, 3].includes(sum)) {
+                            won = true;
+                            payout = 1;
+                        } else if ([7, 11].includes(sum)) {
+                            won = false;
+                        } else if (sum !== 12) {
+                            this.crapsPoint = sum;
+                        }
+                    } else {
+                        if (sum === 7) {
+                            won = true;
+                            payout = 1;
+                            this.crapsPoint = null;
+                            document.getElementById('point-number').textContent = 'Off';
+                        } else if (sum === this.crapsPoint) {
+                            won = false;
+                            this.crapsPoint = null;
+                            document.getElementById('point-number').textContent = 'Off';
+                        }
+                    }
+                    break;
+                case 'come':
+                    if ([7, 11].includes(sum)) {
+                        won = true;
+                        payout = 1;
+                    } else if ([2, 3, 12].includes(sum)) {
+                        won = false;
+                    }
+                    break;
+                case 'field':
+                    if ([2, 3, 4, 9, 10, 11, 12].includes(sum)) {
+                        won = true;
+                        payout = sum === 2 || sum === 12 ? 2 : 1;
+                    }
+                    break;
+            }
+
+            if (won) {
+                const winnings = bet.amount * payout;
+                totalWinnings += winnings;
+            }
+        });
+
+        if (totalWinnings > 0) {
+            game.addMoney(totalWinnings);
+            game.showNotification(`Craps win! +$${totalWinnings.toLocaleString()}`, 'success');
+        }
+
+        // Clear bets for next roll
+        this.crapsBets = [];
+        this.updateCrapsBetsDisplay();
+
+        const balanceElement = document.getElementById('casino-balance');
+        if (balanceElement) {
+            balanceElement.textContent = game.player.money.toLocaleString();
+        }
+
+        const statusElement = document.getElementById('craps-status');
+        if (statusElement) {
+            statusElement.textContent = `Rolled ${sum}`;
+        }
+    }
+
+    getDieSymbol(number) {
+        const symbols = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+        return symbols[number - 1];
+    }
+
+    updateCrapsDisplay() {
+        document.getElementById('point-number').textContent = this.crapsPoint || 'Off';
+        document.getElementById('last-roll').textContent = '-';
+        this.updateCrapsBetsDisplay();
+    }
+
+    updateCrapsBetsDisplay() {
+        const betsElement = document.getElementById('craps-bets');
+        if (betsElement) {
+            if (this.crapsBets.length === 0) {
+                betsElement.textContent = 'No bets placed';
+            } else {
+                betsElement.innerHTML = this.crapsBets.map(bet =>
+                    `<div>${bet.type.toUpperCase()}: $${bet.amount}</div>`
+                ).join('');
+            }
+        }
+    }
+
+    // Keno Game
+    initializeKeno() {
+        this.selectedKenoNumbers = [];
+        this.generateKenoBoard();
+    }
+
+    generateKenoBoard() {
+        const board = document.getElementById('keno-numbers');
+        if (!board) return;
+
+        board.innerHTML = '';
+
+        for (let i = 1; i <= 80; i++) {
+            const numberDiv = document.createElement('div');
+            numberDiv.className = 'keno-number';
+            numberDiv.textContent = i.toString();
+            numberDiv.onclick = () => this.toggleKenoNumber(i);
+            board.appendChild(numberDiv);
+        }
+    }
+
+    toggleKenoNumber(number) {
+        const index = this.selectedKenoNumbers.indexOf(number);
+
+        if (index > -1) {
+            this.selectedKenoNumbers.splice(index, 1);
+        } else if (this.selectedKenoNumbers.length < 10) {
+            this.selectedKenoNumbers.push(number);
+        } else {
+            game.showNotification('Maximum 10 numbers allowed!', 'warning');
+            return;
+        }
+
+        this.updateKenoDisplay();
+    }
+
+    updateKenoDisplay() {
+        // Update all number displays
+        const numbers = document.querySelectorAll('.keno-number');
+        numbers.forEach((numDiv, index) => {
+            const num = index + 1;
+            if (this.selectedKenoNumbers.includes(num)) {
+                numDiv.classList.add('selected');
+            } else {
+                numDiv.classList.remove('selected');
+                numDiv.classList.remove('drawn');
+            }
+        });
+
+        // Update selected numbers display
+        const selectedDiv = document.getElementById('selected-numbers');
+        if (selectedDiv) {
+            selectedDiv.textContent = this.selectedKenoNumbers.length > 0 ?
+                this.selectedKenoNumbers.join(', ') : 'None';
+        }
+    }
+
+    playKeno() {
+        const betAmount = parseInt(document.getElementById('keno-bet').value) || 10;
+
+        if (this.selectedKenoNumbers.length === 0) {
+            game.showNotification('Select some numbers first!', 'warning');
+            return;
+        }
+
+        if (game.player.money < betAmount) {
+            game.showNotification('Not enough money!', 'error');
+            return;
+        }
+
+        if (!game.spendMoney(betAmount)) return;
+
+        // Draw 20 random numbers
+        const drawnNumbers = [];
+        const availableNumbers = Array.from({length: 80}, (_, i) => i + 1);
+
+        for (let i = 0; i < 20; i++) {
+            const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+            drawnNumbers.push(availableNumbers.splice(randomIndex, 1)[0]);
+        }
+
+        // Mark drawn numbers
+        const numbers = document.querySelectorAll('.keno-number');
+        drawnNumbers.forEach(num => {
+            const numDiv = numbers[num - 1];
+            if (numDiv) {
+                numDiv.classList.add('drawn');
+            }
+        });
+
+        // Calculate hits
+        const hits = this.selectedKenoNumbers.filter(num => drawnNumbers.includes(num)).length;
+
+        // Calculate payout (simplified)
+        let payout = 0;
+        if (hits >= 5) {
+            payout = betAmount * Math.pow(2, hits - 4);
+        }
+
+        if (payout > 0) {
+            game.addMoney(payout);
+            game.showNotification(`Keno: ${hits} hits! Won $${payout.toLocaleString()}`, 'success');
+        } else {
+            game.showNotification(`Keno: ${hits} hits. Better luck next time!`, 'info');
+        }
+
+        const balanceElement = document.getElementById('casino-balance');
+        if (balanceElement) {
+            balanceElement.textContent = game.player.money.toLocaleString();
+        }
+
+        // Clear selection for next game
+        setTimeout(() => {
+            this.selectedKenoNumbers = [];
+            this.updateKenoDisplay();
+        }, 3000);
+    }
+
+    clearKenoNumbers() {
+        this.selectedKenoNumbers = [];
+        this.updateKenoDisplay();
+    }
+
+    // High-Low Game
+    initializeHighLow() {
+        this.currentCard = null;
+        this.nextCard = null;
+        this.streak = 0;
+        this.highLowMultiplier = 1.0;
+        this.startHighLowGame();
+    }
+
+    startHighLowGame() {
+        const suits = ['♠', '♥', '♦', '♣'];
+        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+        this.currentCard = {
+            value: values[Math.floor(Math.random() * values.length)],
+            suit: suits[Math.floor(Math.random() * suits.length)]
+        };
+
+        this.nextCard = {
+            value: values[Math.floor(Math.random() * values.length)],
+            suit: suits[Math.floor(Math.random() * suits.length)]
+        };
+
+        this.updateHighLowDisplay(true);
+    }
+
+    updateHighLowDisplay(hideNext = false) {
+        const currentCardDiv = document.getElementById('current-card');
+        const nextCardDiv = document.getElementById('next-card');
+
+        if (currentCardDiv) {
+            currentCardDiv.textContent = this.currentCard.value + this.currentCard.suit;
+            if (this.currentCard.suit === '♥' || this.currentCard.suit === '♦') {
+                currentCardDiv.style.color = '#ff6b35';
+            } else {
+                currentCardDiv.style.color = 'white';
+            }
+        }
+
+        if (nextCardDiv) {
+            nextCardDiv.textContent = hideNext ? '❓' : (this.nextCard.value + this.nextCard.suit);
+            if (!hideNext && (this.nextCard.suit === '♥' || this.nextCard.suit === '♦')) {
+                nextCardDiv.style.color = '#ff6b35';
+            } else if (!hideNext) {
+                nextCardDiv.style.color = 'white';
+            }
+        }
+
+        document.getElementById('streak-count').textContent = this.streak.toString();
+        document.getElementById('multiplier').textContent = this.highLowMultiplier.toFixed(1) + 'x';
+    }
+
+    guessHighLow(guess) {
+        const betAmount = parseInt(document.getElementById('highlow-bet').value) || 50;
+
+        if (game.player.money < betAmount) {
+            game.showNotification('Not enough money!', 'error');
+            return;
+        }
+
+        if (!game.spendMoney(betAmount)) return;
+
+        const currentValue = this.getCardNumericValue(this.currentCard);
+        const nextValue = this.getCardNumericValue(this.nextCard);
+
+        const correct = (guess === 'high' && nextValue > currentValue) ||
+                       (guess === 'low' && nextValue < currentValue);
+
+        if (correct) {
+            this.streak++;
+            this.highLowMultiplier *= 1.5;
+            const winnings = Math.floor(betAmount * (this.highLowMultiplier - 1));
+            game.addMoney(winnings + betAmount); // Return bet + winnings
+
+            game.showNotification(`Correct! Streak: ${this.streak} (+$${winnings})`, 'success');
+        } else {
+            this.streak = 0;
+            this.highLowMultiplier = 1.0;
+            game.showNotification('Wrong guess! Streak reset.', 'error');
+        }
+
+        // Reveal next card
+        this.updateHighLowDisplay(false);
+
+        // Move to next round
+        setTimeout(() => {
+            this.currentCard = this.nextCard;
+            const suits = ['♠', '♥', '♦', '♣'];
+            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+            this.nextCard = {
+                value: values[Math.floor(Math.random() * values.length)],
+                suit: suits[Math.floor(Math.random() * suits.length)]
+            };
+
+            this.updateHighLowDisplay(true);
+        }, 2000);
+
+        const balanceElement = document.getElementById('casino-balance');
+        if (balanceElement) {
+            balanceElement.textContent = game.player.money.toLocaleString();
+        }
+    }
+
+    getCardNumericValue(card) {
+        const valueMap = {'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13};
+        return valueMap[card.value] || 0;
+    }
+
+    // Lottery Game
+    initializeLottery() {
+        this.selectedLotteryNumbers = [];
+        this.generateLotteryBoard();
+    }
+
+    generateLotteryBoard() {
+        const board = document.getElementById('lottery-numbers');
+        if (!board) return;
+
+        board.innerHTML = '';
+
+        for (let i = 1; i <= 49; i++) {
+            const numberDiv = document.createElement('div');
+            numberDiv.className = 'lottery-number';
+            numberDiv.textContent = i.toString();
+            numberDiv.onclick = () => this.toggleLotteryNumber(i);
+            board.appendChild(numberDiv);
+        }
+    }
+
+    toggleLotteryNumber(number) {
+        const index = this.selectedLotteryNumbers.indexOf(number);
+
+        if (index > -1) {
+            this.selectedLotteryNumbers.splice(index, 1);
+        } else if (this.selectedLotteryNumbers.length < 6) {
+            this.selectedLotteryNumbers.push(number);
+        } else {
+            game.showNotification('Maximum 6 numbers allowed!', 'warning');
+            return;
+        }
+
+        this.updateLotteryDisplay();
+    }
+
+    updateLotteryDisplay() {
+        // Update all number displays
+        const numbers = document.querySelectorAll('.lottery-number');
+        numbers.forEach((numDiv, index) => {
+            const num = index + 1;
+            if (this.selectedLotteryNumbers.includes(num)) {
+                numDiv.classList.add('selected');
+            } else {
+                numDiv.classList.remove('selected');
+            }
+        });
+
+        // Update selected ticket display
+        const selectedDiv = document.getElementById('selected-ticket');
+        if (selectedDiv) {
+            selectedDiv.textContent = this.selectedLotteryNumbers.length > 0 ?
+                this.selectedLotteryNumbers.join(', ') : 'No numbers selected';
+        }
+    }
+
+    buyLotteryTicket() {
+        if (this.selectedLotteryNumbers.length !== 6) {
+            game.showNotification('Select exactly 6 numbers!', 'warning');
+            return;
+        }
+
+        if (game.player.money < 10) {
+            game.showNotification('Not enough money! Tickets cost $10.', 'error');
+            return;
+        }
+
+        if (!game.spendMoney(10)) return;
+
+        // Generate winning numbers
+        const winningNumbers = [];
+        const availableNumbers = Array.from({length: 49}, (_, i) => i + 1);
+
+        for (let i = 0; i < 6; i++) {
+            const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+            winningNumbers.push(availableNumbers.splice(randomIndex, 1)[0]);
+        }
+
+        // Check matches
+        const matches = this.selectedLotteryNumbers.filter(num => winningNumbers.includes(num)).length;
+
+        let winnings = 0;
+        if (matches === 6) {
+            winnings = 1000000; // Jackpot
+        } else if (matches === 5) {
+            winnings = 10000;
+        } else if (matches === 4) {
+            winnings = 100;
+        } else if (matches === 3) {
+            winnings = 10;
+        }
+
+        if (winnings > 0) {
+            game.addMoney(winnings);
+            game.showNotification(`LOTTERY WIN! ${matches} matches! Won $${winnings.toLocaleString()}!`, 'success');
+        } else {
+            game.showNotification(`No matches. Winning numbers: ${winningNumbers.join(', ')}`, 'info');
+        }
+
+        // Update jackpot (simulated)
+        const jackpotElement = document.getElementById('jackpot-amount');
+        if (jackpotElement) {
+            const currentJackpot = parseInt(jackpotElement.textContent.replace(/,/g, '')) || 1000000;
+            jackpotElement.textContent = (currentJackpot + 10000).toLocaleString();
+        }
+
+        const balanceElement = document.getElementById('casino-balance');
+        if (balanceElement) {
+            balanceElement.textContent = game.player.money.toLocaleString();
+        }
+
+        // Clear selection for next ticket
+        this.selectedLotteryNumbers = [];
+        this.updateLotteryDisplay();
+    }
+
+    quickPickLottery() {
+        this.selectedLotteryNumbers = [];
+        const availableNumbers = Array.from({length: 49}, (_, i) => i + 1);
+
+        // Pick 6 random numbers
+        for (let i = 0; i < 6; i++) {
+            const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+            this.selectedLotteryNumbers.push(availableNumbers.splice(randomIndex, 1)[0]);
+        }
+
+        this.selectedLotteryNumbers.sort((a, b) => a - b);
+        this.updateLotteryDisplay();
+    }
+
+    clearLotteryNumbers() {
+        this.selectedLotteryNumbers = [];
+        this.updateLotteryDisplay();
+    }
+
+    // Russian Roulette Game
+    initializeRussianRoulette() {
+        this.rrChamber = Math.floor(Math.random() * 6) + 1; // 1-6
+        this.updateRussianRouletteDisplay();
+    }
+
+    updateRussianRouletteDisplay() {
+        // Reset all chambers
+        for (let i = 1; i <= 6; i++) {
+            const chamber = document.getElementById(`chamber${i}`);
+            if (chamber) {
+                chamber.classList.remove('loaded');
+            }
+        }
+
+        // Show loaded chamber (for demo only - in real game this would be hidden)
+        const loadedChamber = document.getElementById(`chamber${this.rrChamber}`);
+        if (loadedChamber) {
+            loadedChamber.classList.add('loaded');
+        }
+    }
+
+    playRussianRoulette() {
+        const betAmount = parseInt(document.getElementById('rr-bet').value) || 1000;
+
+        if (game.player.money < betAmount) {
+            game.showNotification('Not enough money for this risk!', 'error');
+            return;
+        }
+
+        if (!game.spendMoney(betAmount)) return;
+
+        // Animate hammer
+        const hammer = document.querySelector('.hammer');
+        hammer.classList.add('fired');
+
+        setTimeout(() => {
+            hammer.classList.remove('fired');
+
+            const result = Math.floor(Math.random() * 6) + 1;
+
+            if (result === this.rrChamber) {
+                // BANG! Player loses
+                const damage = Math.floor(Math.random() * 50) + 25;
+                game.changeLife(-damage);
+                game.showNotification(`BANG! Chamber ${result} was loaded! Lost ${damage} life!`, 'error');
+
+                // Reset game
+                this.initializeRussianRoulette();
+            } else {
+                // Click! Player wins
+                const winnings = betAmount * 5;
+                game.addMoney(winnings);
+                game.showNotification(`CLICK! Chamber ${result} was empty! Won $${winnings.toLocaleString()}!`, 'success');
+
+                // New round with new chamber
+                this.rrChamber = Math.floor(Math.random() * 6) + 1;
+                this.updateRussianRouletteDisplay();
+            }
+
+            const balanceElement = document.getElementById('casino-balance');
+            if (balanceElement) {
+                balanceElement.textContent = game.player.money.toLocaleString();
+            }
+        }, 1000);
+    }
+
+    // Spin the Wheel Game
+    initializeSpinWheel() {
+        // Wheel is already set up in HTML
+    }
+
+    spinWheel() {
+        const betAmount = 20; // Fixed bet
+
+        if (game.player.money < betAmount) {
+            game.showNotification('Not enough money! Spin costs $20.', 'error');
+            return;
+        }
+
+        if (!game.spendMoney(betAmount)) return;
+
+        const wheel = document.querySelector('.fortune-wheel');
+        const result = Math.floor(Math.random() * 6);
+
+        const rotations = 5 + result; // 5 full rotations + result
+        const rotationDegrees = rotations * 60; // 60 degrees per segment
+
+        wheel.style.transform = `rotate(${rotationDegrees}deg)`;
+
+        setTimeout(() => {
+            const prizes = [0, 50, 100, 500, 1000, 5000];
+            const winnings = prizes[result];
+
+            if (winnings > 0) {
+                game.addMoney(winnings);
+                game.showNotification(`Wheel landed on $${winnings.toLocaleString()}!`, 'success');
+            } else {
+                game.showNotification('Wheel landed on $0. Better luck next time!', 'info');
+            }
+
+            const balanceElement = document.getElementById('casino-balance');
+            if (balanceElement) {
+                balanceElement.textContent = game.player.money.toLocaleString();
+            }
+
+            // Reset wheel
+            setTimeout(() => {
+                wheel.style.transform = 'rotate(0deg)';
+            }, 2000);
+        }, 3000);
     }
 
     handleGym(activity) {

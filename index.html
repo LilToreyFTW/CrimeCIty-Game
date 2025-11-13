@@ -3852,6 +3852,480 @@ client.login('your-discord-bot-token');</code></pre>
             </div>
         </div>
 
+        <!-- Casino Game Modals -->
+        <div id="casino-modals">
+            <!-- Slots Modal -->
+            <div id="slots-modal" class="modal casino-modal">
+                <div class="modal-content casino-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-coins"></i> Slots</h3>
+                        <button class="close-modal" onclick="closeCasinoModal('slots-modal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="slots-game">
+                            <div class="slot-machine">
+                                <div class="reels">
+                                    <div class="reel" id="reel1">
+                                        <div class="symbol">🍒</div>
+                                        <div class="symbol">🍋</div>
+                                        <div class="symbol">🍊</div>
+                                        <div class="symbol">⭐</div>
+                                        <div class="symbol">💎</div>
+                                        <div class="symbol">7️⃣</div>
+                                    </div>
+                                    <div class="reel" id="reel2">
+                                        <div class="symbol">🍒</div>
+                                        <div class="symbol">🍋</div>
+                                        <div class="symbol">🍊</div>
+                                        <div class="symbol">⭐</div>
+                                        <div class="symbol">💎</div>
+                                        <div class="symbol">7️⃣</div>
+                                    </div>
+                                    <div class="reel" id="reel3">
+                                        <div class="symbol">🍒</div>
+                                        <div class="symbol">🍋</div>
+                                        <div class="symbol">🍊</div>
+                                        <div class="symbol">⭐</div>
+                                        <div class="symbol">💎</div>
+                                        <div class="symbol">7️⃣</div>
+                                    </div>
+                                </div>
+                                <div class="slot-controls">
+                                    <div class="bet-amount">
+                                        <label>Bet Amount:</label>
+                                        <input type="number" id="slots-bet" min="10" max="1000" value="50">
+                                    </div>
+                                    <button class="spin-btn" onclick="spinSlots()">
+                                        <i class="fas fa-play"></i> Spin ($<span id="slots-cost">50</span>)
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="game-info">
+                                <div class="payouts">
+                                    <h4>Payouts:</h4>
+                                    <div class="payout-item">🍒🍒🍒 = 5x bet</div>
+                                    <div class="payout-item">⭐⭐⭐ = 10x bet</div>
+                                    <div class="payout-item">💎💎💎 = 20x bet</div>
+                                    <div class="payout-item">7️⃣7️⃣7️⃣ = 50x bet</div>
+                                </div>
+                                <div class="balance">
+                                    <h4>Your Balance: $<span id="casino-balance">0</span></h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Blackjack Modal -->
+            <div id="blackjack-modal" class="modal casino-modal">
+                <div class="modal-content casino-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-spade"></i> Blackjack</h3>
+                        <button class="close-modal" onclick="closeCasinoModal('blackjack-modal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="blackjack-game">
+                            <div class="dealer-hand">
+                                <h4>Dealer:</h4>
+                                <div class="cards" id="dealer-cards"></div>
+                                <div class="hand-value" id="dealer-value">0</div>
+                            </div>
+                            <div class="player-hand">
+                                <h4>You:</h4>
+                                <div class="cards" id="player-cards"></div>
+                                <div class="hand-value" id="player-value">0</div>
+                            </div>
+                            <div class="game-controls">
+                                <div class="bet-amount">
+                                    <label>Bet Amount:</label>
+                                    <input type="number" id="blackjack-bet" min="10" max="1000" value="50">
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="game-btn" id="deal-btn" onclick="dealBlackjack()">Deal</button>
+                                    <button class="game-btn" id="hit-btn" onclick="hitBlackjack()" disabled>Hit</button>
+                                    <button class="game-btn" id="stand-btn" onclick="standBlackjack()" disabled>Stand</button>
+                                    <button class="game-btn" id="double-btn" onclick="doubleDownBlackjack()" disabled>Double Down</button>
+                                </div>
+                            </div>
+                            <div class="game-status" id="blackjack-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Roulette Modal -->
+            <div id="roulette-modal" class="modal casino-modal">
+                <div class="modal-content casino-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-circle"></i> Roulette</h3>
+                        <button class="close-modal" onclick="closeCasinoModal('roulette-modal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="roulette-game">
+                            <div class="roulette-wheel">
+                                <div class="wheel" id="roulette-wheel">
+                                    <div class="number" style="--rotation: 0deg;">0</div>
+                                    <div class="number red" style="--rotation: 9.73deg;">32</div>
+                                    <div class="number black" style="--rotation: 19.46deg;">15</div>
+                                    <div class="number red" style="--rotation: 29.19deg;">19</div>
+                                    <div class="number black" style="--rotation: 38.92deg;">4</div>
+                                    <div class="number red" style="--rotation: 48.65deg;">21</div>
+                                    <div class="number black" style="--rotation: 58.38deg;">2</div>
+                                    <div class="number red" style="--rotation: 68.11deg;">25</div>
+                                    <div class="number black" style="--rotation: 77.84deg;">17</div>
+                                    <div class="number red" style="--rotation: 87.57deg;">34</div>
+                                    <div class="number black" style="--rotation: 97.3deg;">6</div>
+                                    <div class="number red" style="--rotation: 107.03deg;">27</div>
+                                    <div class="number black" style="--rotation: 116.76deg;">13</div>
+                                    <div class="number red" style="--rotation: 126.49deg;">36</div>
+                                    <div class="number black" style="--rotation: 136.22deg;">11</div>
+                                    <div class="number red" style="--rotation: 145.95deg;">30</div>
+                                    <div class="number black" style="--rotation: 155.68deg;">8</div>
+                                    <div class="number red" style="--rotation: 165.41deg;">23</div>
+                                    <div class="number black" style="--rotation: 175.14deg;">10</div>
+                                    <div class="number red" style="--rotation: 184.87deg;">5</div>
+                                    <div class="number black" style="--rotation: 194.6deg;">24</div>
+                                    <div class="number red" style="--rotation: 204.33deg;">16</div>
+                                    <div class="number black" style="--rotation: 214.06deg;">33</div>
+                                    <div class="number red" style="--rotation: 223.79deg;">1</div>
+                                    <div class="number black" style="--rotation: 233.52deg;">20</div>
+                                    <div class="number red" style="--rotation: 243.25deg;">14</div>
+                                    <div class="number black" style="--rotation: 252.98deg;">31</div>
+                                    <div class="number red" style="--rotation: 262.71deg;">9</div>
+                                    <div class="number black" style="--rotation: 272.44deg;">22</div>
+                                    <div class="number red" style="--rotation: 282.17deg;">18</div>
+                                    <div class="number black" style="--rotation: 291.9deg;">29</div>
+                                    <div class="number red" style="--rotation: 301.63deg;">7</div>
+                                    <div class="number black" style="--rotation: 311.36deg;">28</div>
+                                    <div class="number red" style="--rotation: 321.09deg;">12</div>
+                                    <div class="number black" style="--rotation: 330.82deg;">35</div>
+                                    <div class="number red" style="--rotation: 340.55deg;">3</div>
+                                    <div class="number black" style="--rotation: 350.28deg;">26</div>
+                                </div>
+                                <div class="ball" id="roulette-ball"></div>
+                            </div>
+                            <div class="betting-table">
+                                <div class="bet-options">
+                                    <div class="bet-type">
+                                        <h4>Inside Bets</h4>
+                                        <button class="bet-btn" onclick="placeRouletteBet('straight', 35)">Straight (35:1)</button>
+                                        <button class="bet-btn" onclick="placeRouletteBet('split', 17)">Split (17:1)</button>
+                                        <button class="bet-btn" onclick="placeRouletteBet('corner', 8)">Corner (8:1)</button>
+                                    </div>
+                                    <div class="bet-type">
+                                        <h4>Outside Bets</h4>
+                                        <button class="bet-btn" onclick="placeRouletteBet('red', 1)">Red (1:1)</button>
+                                        <button class="bet-btn" onclick="placeRouletteBet('black', 1)">Black (1:1)</button>
+                                        <button class="bet-btn" onclick="placeRouletteBet('even', 1)">Even (1:1)</button>
+                                        <button class="bet-btn" onclick="placeRouletteBet('odd', 1)">Odd (1:1)</button>
+                                    </div>
+                                </div>
+                                <div class="current-bets" id="current-bets">
+                                    <h4>Current Bets:</h4>
+                                    <div id="bets-list">No bets placed</div>
+                                </div>
+                            </div>
+                            <div class="game-controls">
+                                <button class="spin-btn" onclick="spinRoulette()">Spin Wheel</button>
+                                <button class="clear-btn" onclick="clearRouletteBets()">Clear Bets</button>
+                            </div>
+                            <div class="game-status" id="roulette-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Poker Modal -->
+            <div id="poker-modal" class="modal casino-modal">
+                <div class="modal-content casino-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-heart"></i> Poker</h3>
+                        <button class="close-modal" onclick="closeCasinoModal('poker-modal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="poker-game">
+                            <div class="community-cards">
+                                <h4>Community Cards:</h4>
+                                <div class="cards" id="community-cards"></div>
+                            </div>
+                            <div class="player-hand">
+                                <h4>Your Hand:</h4>
+                                <div class="cards" id="poker-hand"></div>
+                                <div class="hand-rank" id="hand-rank">No hand</div>
+                            </div>
+                            <div class="game-info">
+                                <div class="pot-amount">
+                                    <h4>Pot: $<span id="poker-pot">0</span></h4>
+                                </div>
+                                <div class="current-bet">
+                                    <h4>Current Bet: $<span id="current-bet">0</span></h4>
+                                </div>
+                            </div>
+                            <div class="game-controls">
+                                <div class="bet-amount">
+                                    <label>Bet Amount:</label>
+                                    <input type="number" id="poker-bet" min="10" max="1000" value="50">
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="game-btn" id="deal-poker-btn" onclick="dealPoker()">Deal</button>
+                                    <button class="game-btn" id="fold-btn" onclick="foldPoker()" disabled>Fold</button>
+                                    <button class="game-btn" id="call-btn" onclick="callPoker()" disabled>Call</button>
+                                    <button class="game-btn" id="raise-btn" onclick="raisePoker()" disabled>Raise</button>
+                                </div>
+                            </div>
+                            <div class="game-status" id="poker-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Craps Modal -->
+            <div id="craps-modal" class="modal casino-modal">
+                <div class="modal-content casino-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-dice"></i> Craps</h3>
+                        <button class="close-modal" onclick="closeCasinoModal('craps-modal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="craps-game">
+                            <div class="dice-area">
+                                <div class="dice" id="die1">⚀</div>
+                                <div class="dice" id="die2">⚀</div>
+                            </div>
+                            <div class="craps-info">
+                                <div class="point-number">
+                                    <h4>Point: <span id="point-number">Off</span></h4>
+                                </div>
+                                <div class="last-roll">
+                                    <h4>Last Roll: <span id="last-roll">-</span></h4>
+                                </div>
+                            </div>
+                            <div class="bet-options">
+                                <div class="bet-type">
+                                    <h4>Pass Line</h4>
+                                    <button class="bet-btn" onclick="placeCrapsBet('pass')">Pass Line</button>
+                                </div>
+                                <div class="bet-type">
+                                    <h4>Don't Pass</h4>
+                                    <button class="bet-btn" onclick="placeCrapsBet('dont_pass')">Don't Pass</button>
+                                </div>
+                                <div class="bet-type">
+                                    <h4>Come</h4>
+                                    <button class="bet-btn" onclick="placeCrapsBet('come')">Come</button>
+                                </div>
+                                <div class="bet-type">
+                                    <h4>Field</h4>
+                                    <button class="bet-btn" onclick="placeCrapsBet('field')">Field</button>
+                                </div>
+                            </div>
+                            <div class="game-controls">
+                                <div class="bet-amount">
+                                    <label>Bet Amount:</label>
+                                    <input type="number" id="craps-bet" min="10" max="1000" value="50">
+                                </div>
+                                <button class="roll-btn" onclick="rollDice()">Roll Dice</button>
+                            </div>
+                            <div class="current-bets" id="craps-bets">No bets placed</div>
+                            <div class="game-status" id="craps-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keno Modal -->
+            <div id="keno-modal" class="modal casino-modal">
+                <div class="modal-content casino-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-dice-d20"></i> Keno</h3>
+                        <button class="close-modal" onclick="closeCasinoModal('keno-modal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="keno-game">
+                            <div class="keno-board">
+                                <div class="numbers-grid" id="keno-numbers">
+                                    <!-- Numbers 1-80 will be generated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="selected-numbers">
+                                <h4>Selected Numbers:</h4>
+                                <div id="selected-numbers">None</div>
+                            </div>
+                            <div class="game-controls">
+                                <div class="bet-amount">
+                                    <label>Bet Amount:</label>
+                                    <input type="number" id="keno-bet" min="10" max="100" value="10">
+                                </div>
+                                <button class="play-btn" onclick="playKeno()">Play Keno</button>
+                                <button class="clear-btn" onclick="clearKenoNumbers()">Clear</button>
+                            </div>
+                            <div class="game-status" id="keno-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- High-Low Modal -->
+            <div id="highlow-modal" class="modal casino-modal">
+                <div class="modal-content casino-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-arrow-up"></i> High-Low</h3>
+                        <button class="close-modal" onclick="closeCasinoModal('highlow-modal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="highlow-game">
+                            <div class="card-display">
+                                <div class="current-card" id="current-card">🎴</div>
+                                <div class="next-card" id="next-card">❓</div>
+                            </div>
+                            <div class="streak-info">
+                                <h4>Current Streak: <span id="streak-count">0</span></h4>
+                                <h4>Multiplier: <span id="multiplier">1.0x</span></h4>
+                            </div>
+                            <div class="game-controls">
+                                <div class="bet-amount">
+                                    <label>Bet Amount:</label>
+                                    <input type="number" id="highlow-bet" min="10" max="500" value="50">
+                                </div>
+                                <div class="choice-buttons">
+                                    <button class="choice-btn high" onclick="guessHighLow('high')">
+                                        <i class="fas fa-arrow-up"></i> Higher
+                                    </button>
+                                    <button class="choice-btn low" onclick="guessHighLow('low')">
+                                        <i class="fas fa-arrow-down"></i> Lower
+                                    </button>
+                                </div>
+                                <button class="new-game-btn" onclick="startHighLowGame()">New Game</button>
+                            </div>
+                            <div class="game-status" id="highlow-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lottery Modal -->
+            <div id="lottery-modal" class="modal casino-modal">
+                <div class="modal-content casino-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-ticket-alt"></i> Lottery</h3>
+                        <button class="close-modal" onclick="closeCasinoModal('lottery-modal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="lottery-game">
+                            <div class="lottery-info">
+                                <h4>Today's Jackpot: $<span id="jackpot-amount">1,000,000</span></h4>
+                                <p>Ticket Price: $10</p>
+                                <p>Draw every 24 hours</p>
+                            </div>
+                            <div class="ticket-selection">
+                                <h4>Select Your Numbers (1-49):</h4>
+                                <div class="number-grid" id="lottery-numbers">
+                                    <!-- Numbers will be generated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="selected-ticket">
+                                <h4>Your Ticket:</h4>
+                                <div id="selected-ticket">No numbers selected</div>
+                            </div>
+                            <div class="game-controls">
+                                <button class="buy-btn" onclick="buyLotteryTicket()">Buy Ticket ($10)</button>
+                                <button class="quick-pick-btn" onclick="quickPickLottery()">Quick Pick</button>
+                                <button class="clear-btn" onclick="clearLotteryNumbers()">Clear</button>
+                            </div>
+                            <div class="game-status" id="lottery-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Russian Roulette Modal -->
+            <div id="russian-roulette-modal" class="modal casino-modal">
+                <div class="modal-content casino-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-skull"></i> Russian Roulette</h3>
+                        <button class="close-modal" onclick="closeCasinoModal('russian-roulette-modal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="russian-roulette-game">
+                            <div class="warning-message">
+                                <div class="warning-icon">⚠️</div>
+                                <h4>EXTREME RISK - HIGH REWARD</h4>
+                                <p>1 in 6 chance of losing everything!</p>
+                            </div>
+                            <div class="revolver">
+                                <div class="cylinder">
+                                    <div class="chamber" id="chamber1"></div>
+                                    <div class="chamber" id="chamber2"></div>
+                                    <div class="chamber" id="chamber3"></div>
+                                    <div class="chamber" id="chamber4"></div>
+                                    <div class="chamber" id="chamber5"></div>
+                                    <div class="chamber" id="chamber6"></div>
+                                </div>
+                                <div class="hammer"></div>
+                            </div>
+                            <div class="game-controls">
+                                <div class="bet-amount">
+                                    <label>Risk Amount:</label>
+                                    <input type="number" id="rr-bet" min="100" max="10000" value="1000">
+                                </div>
+                                <button class="danger-btn" onclick="playRussianRoulette()">
+                                    <i class="fas fa-skull"></i> Pull Trigger
+                                </button>
+                                <p class="odds">Odds: 1/6 (16.67%) | Payout: 5x bet</p>
+                            </div>
+                            <div class="game-status" id="rr-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spin the Wheel Modal -->
+            <div id="spin-wheel-modal" class="modal casino-modal">
+                <div class="modal-content casino-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-sync-alt"></i> Spin the Wheel</h3>
+                        <button class="close-modal" onclick="closeCasinoModal('spin-wheel-modal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="spin-wheel-game">
+                            <div class="wheel-container">
+                                <div class="wheel" id="fortune-wheel">
+                                    <div class="wheel-segment" style="--rotation: 0deg; --color: #ff6b6b;">$0</div>
+                                    <div class="wheel-segment" style="--rotation: 60deg; --color: #4ecdc4;">$50</div>
+                                    <div class="wheel-segment" style="--rotation: 120deg; --color: #45b7d1;">$100</div>
+                                    <div class="wheel-segment" style="--rotation: 180deg; --color: #96ceb4;">$500</div>
+                                    <div class="wheel-segment" style="--rotation: 240deg; --color: #ffeaa7;">$1000</div>
+                                    <div class="wheel-segment" style="--rotation: 300deg; --color: #dda0dd;">$5000</div>
+                                </div>
+                                <div class="wheel-pointer"></div>
+                            </div>
+                            <div class="game-controls">
+                                <div class="bet-amount">
+                                    <label>Spin Cost:</label>
+                                    <input type="number" id="wheel-bet" min="10" max="100" value="20" readonly>
+                                </div>
+                                <button class="spin-btn" onclick="spinWheel()">
+                                    <i class="fas fa-play"></i> Spin ($20)
+                                </button>
+                            </div>
+                            <div class="wheel-prizes">
+                                <h4>Prize Distribution:</h4>
+                                <div class="prize-list">
+                                    <div class="prize-item">$0 (16.67%)</div>
+                                    <div class="prize-item">$50 (16.67%)</div>
+                                    <div class="prize-item">$100 (16.67%)</div>
+                                    <div class="prize-item">$500 (16.67%)</div>
+                                    <div class="prize-item">$1000 (16.67%)</div>
+                                    <div class="prize-item">$5000 (16.67%)</div>
+                                </div>
+                            </div>
+                            <div class="game-status" id="wheel-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Notification System -->
         <div id="notifications" class="notifications"></div>
     </div>
