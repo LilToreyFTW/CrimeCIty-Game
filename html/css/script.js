@@ -914,6 +914,39 @@ class GameActions {
         // Education system
         this.initializeEducationSystem();
 
+        // Crime system
+        this.initializeCrimeSystem();
+
+        // Battle system
+        this.initializeBattleSystem();
+
+        // Job system
+        this.initializeJobSystem();
+
+        // Market system
+        this.initializeMarketSystem();
+
+        // Settings panel
+        this.initializeSettingsPanel();
+
+        // Raceway system
+        this.initializeRacewaySystem();
+
+        // Missions system
+        this.initializeMissionsSystem();
+
+        // Jail system
+        this.initializeJailSystem();
+
+        // Newspaper system
+        this.initializeNewspaperSystem();
+
+        // Character customization system
+        this.initializeCharacterCustomizationSystem();
+
+        // Gym system
+        this.initializeGymSystem();
+
         // Crime buttons
         document.querySelectorAll('.crime-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -3465,6 +3498,2160 @@ class GameActions {
         }
     }
 
+    // Initialize Crime System
+    initializeCrimeSystem() {
+        // Crime tab switching
+        document.querySelectorAll('.crime-tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tabId = e.currentTarget.dataset.crimeTab;
+                this.switchCrimeTab(tabId);
+            });
+        });
+
+        // Crime action buttons
+        document.querySelectorAll('.crime-action-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const crimeType = e.currentTarget.dataset.crime;
+                this.handleCrimeAttempt(crimeType);
+            });
+        });
+
+        // Update crime statistics
+        this.updateCrimeStats();
+    }
+
+    switchCrimeTab(tabId) {
+        // Hide all crime categories
+        document.querySelectorAll('.crime-category').forEach(category => {
+            category.classList.remove('active');
+        });
+
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.crime-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected category
+        document.getElementById(tabId).classList.add('active');
+
+        // Add active class to clicked button
+        document.querySelector(`[data-crime-tab="${tabId}"]`).classList.add('active');
+    }
+
+    handleCrimeAttempt(crimeType) {
+        if (game.player.energy < 10) {
+            game.showNotification('Not enough energy to commit crimes!', 'error');
+            return;
+        }
+
+        if (game.player.jailTime > 0) {
+            game.showNotification('You are in jail! Cannot commit crimes.', 'error');
+            return;
+        }
+
+        const crimeData = this.getCrimeData(crimeType);
+        if (!crimeData) return;
+
+        // Open crime attempt modal
+        this.openCrimeModal(crimeType, crimeData);
+    }
+
+    getCrimeData(crimeType) {
+        const crimeDatabase = {
+            // Street Crimes
+            'pickpocket': {
+                name: 'Pickpocketing',
+                baseSuccessRate: 85,
+                rewardRange: [50, 200],
+                energyCost: 10,
+                jailTimeRange: [2, 6],
+                riskLevel: 'Low',
+                description: 'Steal wallets and valuables from unsuspecting victims in crowded areas.',
+                skills: ['Dexterity', 'Stealth'],
+                skillRequirements: { dexterity: 50, stealth: 30 },
+                category: 'street'
+            },
+            'mugging': {
+                name: 'Mugging',
+                baseSuccessRate: 65,
+                rewardRange: [200, 800],
+                energyCost: 20,
+                jailTimeRange: [8, 24],
+                riskLevel: 'Medium',
+                description: 'Rob victims at gunpoint in dark alleys and secluded areas.',
+                skills: ['Strength', 'Intimidation'],
+                skillRequirements: { strength: 60, intimidation: 40 },
+                category: 'street'
+            },
+            'carjacking': {
+                name: 'Carjacking',
+                baseSuccessRate: 45,
+                rewardRange: [1000, 3000],
+                energyCost: 30,
+                jailTimeRange: [24, 72],
+                riskLevel: 'High',
+                description: 'Steal vehicles from parking lots or by force from drivers.',
+                skills: ['Strength', 'Speed'],
+                skillRequirements: { strength: 70, speed: 60 },
+                category: 'street'
+            },
+
+            // Property Crimes
+            'shoplifting': {
+                name: 'Shoplifting',
+                baseSuccessRate: 75,
+                rewardRange: [100, 400],
+                energyCost: 12,
+                jailTimeRange: [4, 12],
+                riskLevel: 'Low',
+                description: 'Steal merchandise from stores without getting caught by security.',
+                skills: ['Dexterity', 'Stealth'],
+                skillRequirements: { dexterity: 40, stealth: 50 },
+                category: 'property'
+            },
+            'burglary': {
+                name: 'Burglary',
+                baseSuccessRate: 55,
+                rewardRange: [800, 2500],
+                energyCost: 25,
+                jailTimeRange: [24, 168],
+                riskLevel: 'High',
+                description: 'Break into homes and businesses to steal valuables and cash.',
+                skills: ['Strength', 'Cracking'],
+                skillRequirements: { strength: 50, cracking: 60 },
+                category: 'property'
+            },
+            'truck-hijacking': {
+                name: 'Truck Hijacking',
+                baseSuccessRate: 35,
+                rewardRange: [3000, 8000],
+                energyCost: 40,
+                jailTimeRange: [72, 168],
+                riskLevel: 'Very High',
+                description: 'Steal cargo from delivery trucks on highways and loading docks.',
+                skills: ['Strength', 'Speed'],
+                skillRequirements: { strength: 80, speed: 70 },
+                category: 'property'
+            },
+
+            // Violent Crimes
+            'armed-robbery': {
+                name: 'Armed Robbery',
+                baseSuccessRate: 40,
+                rewardRange: [1500, 5000],
+                energyCost: 35,
+                jailTimeRange: [48, 168],
+                riskLevel: 'High',
+                description: 'Rob businesses or individuals using weapons and intimidation.',
+                skills: ['Strength', 'Intimidation'],
+                skillRequirements: { strength: 70, intimidation: 60 },
+                category: 'violent'
+            },
+            'murder-hire': {
+                name: 'Murder for Hire',
+                baseSuccessRate: 25,
+                rewardRange: [10000, 25000],
+                energyCost: 60,
+                jailTimeRange: [600, 1200], // 10-20 years
+                riskLevel: 'Extreme',
+                description: 'Take contracts to eliminate targets for wealthy clients.',
+                skills: ['Combat Training', 'Stealth'],
+                skillRequirements: { combatTraining: 90, stealth: 80 },
+                category: 'violent'
+            },
+
+            // Organized Crimes
+            'drug-trafficking': {
+                name: 'Drug Trafficking',
+                baseSuccessRate: 50,
+                rewardRange: [5000, 15000],
+                energyCost: 45,
+                jailTimeRange: [120, 600], // 5-25 years
+                riskLevel: 'Very High',
+                description: 'Smuggle and distribute illegal drugs across city borders.',
+                skills: ['Intelligence', 'Connections'],
+                skillRequirements: { intelligence: 70, connections: 60 },
+                category: 'organized'
+            },
+            'bank-heist': {
+                name: 'Bank Heist',
+                baseSuccessRate: 20,
+                rewardRange: [50000, 200000],
+                energyCost: 80,
+                jailTimeRange: [480, 1200], // 20-50 years
+                riskLevel: 'Extreme',
+                description: 'Plan and execute a major bank robbery with a full crew.',
+                skills: ['Leadership', 'Planning'],
+                skillRequirements: { leadership: 80, planning: 90 },
+                category: 'organized'
+            },
+
+            // Cyber Crimes
+            'hacking': {
+                name: 'Hacking',
+                baseSuccessRate: 60,
+                rewardRange: [300, 1200],
+                energyCost: 15,
+                jailTimeRange: [18, 54], // 6-18 months
+                riskLevel: 'Medium',
+                description: 'Break into computer systems to steal data or money.',
+                skills: ['Cracking', 'Intelligence'],
+                skillRequirements: { cracking: 70, intelligence: 60 },
+                category: 'cyber'
+            },
+            'identity-theft': {
+                name: 'Identity Theft',
+                baseSuccessRate: 70,
+                rewardRange: [400, 1500],
+                energyCost: 18,
+                jailTimeRange: [12, 36], // 1-3 years
+                riskLevel: 'Medium',
+                description: 'Steal personal information to commit fraud and financial crimes.',
+                skills: ['Cracking', 'Intelligence'],
+                skillRequirements: { cracking: 50, intelligence: 50 },
+                category: 'cyber'
+            }
+        };
+
+        return crimeDatabase[crimeType];
+    }
+
+    openCrimeModal(crimeType, crimeData) {
+        const modal = document.getElementById('crime-modal');
+        const modalTitle = document.getElementById('crime-modal-title');
+        const attemptedCrime = document.getElementById('attempted-crime');
+        const successChance = document.getElementById('success-chance');
+        const potentialReward = document.getElementById('potential-reward');
+        const riskLevel = document.getElementById('risk-level');
+        const attemptBtn = document.getElementById('attempt-crime-btn');
+
+        modalTitle.textContent = `Attempt ${crimeData.name}`;
+        attemptedCrime.textContent = crimeData.name;
+
+        // Calculate adjusted success rate based on player skills
+        const adjustedSuccessRate = this.calculateSuccessRate(crimeData);
+        successChance.textContent = `${adjustedSuccessRate}%`;
+
+        // Calculate potential reward
+        const reward = Math.floor(Math.random() * (crimeData.rewardRange[1] - crimeData.rewardRange[0])) + crimeData.rewardRange[0];
+        potentialReward.textContent = `$${reward.toLocaleString()}`;
+
+        riskLevel.textContent = crimeData.riskLevel;
+
+        // Store crime data for attempt
+        attemptBtn.dataset.crimeType = crimeType;
+        attemptBtn.dataset.reward = reward;
+        attemptBtn.dataset.successRate = adjustedSuccessRate;
+        attemptBtn.dataset.jailTimeRange = JSON.stringify(crimeData.jailTimeRange);
+        attemptBtn.dataset.energyCost = crimeData.energyCost;
+
+        // Hide outcome section
+        document.getElementById('crime-outcome').style.display = 'none';
+
+        modal.style.display = 'block';
+    }
+
+    calculateSuccessRate(crimeData) {
+        let baseRate = crimeData.baseSuccessRate;
+
+        // Adjust based on player skills
+        for (const [skill, requirement] of Object.entries(crimeData.skillRequirements)) {
+            const playerSkill = game.player.skills[skill] || 0;
+            const skillBonus = Math.min(20, Math.max(-10, (playerSkill - requirement) / 2));
+            baseRate += skillBonus;
+        }
+
+        // Clamp between 5% and 95%
+        return Math.max(5, Math.min(95, Math.round(baseRate)));
+    }
+
+    attemptCrime() {
+        const btn = document.getElementById('attempt-crime-btn');
+        const crimeType = btn.dataset.crimeType;
+        const reward = parseInt(btn.dataset.reward);
+        const successRate = parseInt(btn.dataset.successRate);
+        const jailTimeRange = JSON.parse(btn.dataset.jailTimeRange);
+        const energyCost = parseInt(btn.dataset.energyCost);
+
+        // Disable button during attempt
+        btn.disabled = true;
+        btn.textContent = 'Attempting...';
+
+        // Deduct energy
+        game.changeEnergy(-energyCost);
+
+        // Simulate crime attempt with animation
+        setTimeout(() => {
+            const success = Math.random() * 100 < successRate;
+
+            if (success) {
+                this.handleCrimeSuccess(crimeType, reward);
+            } else {
+                this.handleCrimeFailure(crimeType, jailTimeRange);
+            }
+
+            // Re-enable button
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-play"></i> Attempt Crime';
+
+            // Update crime statistics
+            this.updateCrimeStats();
+        }, 2000);
+    }
+
+    handleCrimeSuccess(crimeType, reward) {
+        // Add money
+        game.addMoney(reward);
+
+        // Update skills
+        this.updateCrimeSkills(crimeType);
+
+        // Show success outcome
+        this.showCrimeOutcome(true, `Crime successful! You earned $${reward.toLocaleString()}`, [reward]);
+
+        // Update player stats
+        game.player.crimeStats.successfulCrimes = (game.player.crimeStats.successfulCrimes || 0) + 1;
+        game.player.crimeStats.totalEarnings = (game.player.crimeStats.totalEarnings || 0) + reward;
+    }
+
+    handleCrimeFailure(crimeType, jailTimeRange) {
+        // Calculate jail time
+        const jailTime = Math.floor(Math.random() * (jailTimeRange[1] - jailTimeRange[0])) + jailTimeRange[0];
+
+        // Apply jail time
+        game.player.jailTime = jailTime;
+
+        // Calculate damage (optional)
+        const damage = Math.floor(Math.random() * 30) + 10;
+        game.changeLife(-damage);
+
+        // Show failure outcome
+        this.showCrimeOutcome(false, `Crime failed! You were caught and sentenced to ${this.formatTime(jailTime)}. Lost ${damage} life.`, []);
+
+        // Update player stats
+        game.player.crimeStats.failedCrimes = (game.player.crimeStats.failedCrimes || 0) + 1;
+        game.player.crimeStats.totalJailTime = (game.player.crimeStats.totalJailTime || 0) + jailTime;
+    }
+
+    showCrimeOutcome(success, message, rewards) {
+        const outcomeSection = document.getElementById('crime-outcome');
+        const outcomeTitle = document.getElementById('outcome-title');
+        const outcomeIcon = document.getElementById('outcome-icon');
+        const outcomeMessage = document.getElementById('outcome-message');
+        const outcomeRewards = document.getElementById('outcome-rewards');
+
+        outcomeTitle.textContent = success ? 'Success!' : 'Failure!';
+        outcomeIcon.className = `outcome-icon ${success ? 'success' : 'failure'}`;
+        outcomeIcon.innerHTML = success ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>';
+        outcomeMessage.textContent = message;
+
+        // Clear previous rewards
+        outcomeRewards.innerHTML = '';
+
+        // Add reward items
+        if (success && rewards.length > 0) {
+            rewards.forEach(reward => {
+                const rewardItem = document.createElement('div');
+                rewardItem.className = 'reward-item';
+                rewardItem.textContent = `$${reward.toLocaleString()}`;
+                outcomeRewards.appendChild(rewardItem);
+            });
+        }
+
+        outcomeSection.style.display = 'block';
+    }
+
+    updateCrimeSkills(crimeType) {
+        const crimeData = this.getCrimeData(crimeType);
+        if (!crimeData) return;
+
+        // Increase relevant skills
+        crimeData.skills.forEach(skill => {
+            const skillKey = skill.toLowerCase().replace(' ', '');
+            if (game.player.skills[skillKey] !== undefined) {
+                game.player.skills[skillKey] += 0.1 + Math.random() * 0.2; // 0.1-0.3 increase
+            }
+        });
+    }
+
+    updateCrimeStats() {
+        const stats = game.player.crimeStats || { successfulCrimes: 0, failedCrimes: 0, totalEarnings: 0, totalJailTime: 0 };
+
+        // Calculate success rate
+        const totalCrimes = stats.successfulCrimes + stats.failedCrimes;
+        const successRate = totalCrimes > 0 ? Math.round((stats.successfulCrimes / totalCrimes) * 100) : 75;
+
+        // Update UI
+        document.getElementById('crime-success-rate').textContent = `${successRate}%`;
+        document.getElementById('crime-busts').textContent = stats.failedCrimes;
+        document.getElementById('crime-earnings').textContent = `$${stats.totalEarnings.toLocaleString()}`;
+        document.getElementById('crime-jail-time').textContent = this.formatTime(stats.totalJailTime);
+    }
+
+    formatTime(hours) {
+        if (hours < 24) {
+            return `${hours}h`;
+        } else if (hours < 168) {
+            return `${Math.floor(hours / 24)}d`;
+        } else {
+            return `${Math.floor(hours / 168)}w`;
+        }
+    }
+
+    closeCrimeModal() {
+        document.getElementById('crime-modal').style.display = 'none';
+    }
+
+    cancelCrime() {
+        this.closeCrimeModal();
+    }
+
+    // Initialize Battle System
+    initializeBattleSystem() {
+        // Battle tab switching
+        document.querySelectorAll('.battle-tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tabId = e.currentTarget.dataset.battleTab;
+                this.switchBattleTab(tabId);
+            });
+        });
+
+        // Match action buttons
+        document.querySelectorAll('.match-action-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const matchType = e.currentTarget.dataset.matchType;
+                this.startQuickMatch(matchType);
+            });
+        });
+
+        // Training action buttons
+        document.querySelectorAll('.training-action-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const training = e.currentTarget.dataset.training;
+                this.startTraining(training);
+            });
+        });
+
+        // Ranked match button
+        document.getElementById('find-ranked-match').addEventListener('click', () => {
+            this.findRankedMatch();
+        });
+
+        // Battle action buttons
+        document.querySelectorAll('.battle-action-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const action = e.currentTarget.dataset.action;
+                this.performBattleAction(action);
+            });
+        });
+
+        // Battle history filters
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const filter = e.currentTarget.dataset.filter;
+                this.filterBattleHistory(filter);
+            });
+        });
+
+        // Update battle stats
+        this.updateBattleStats();
+    }
+
+    switchBattleTab(tabId) {
+        // Hide all battle categories
+        document.querySelectorAll('.battle-category').forEach(category => {
+            category.classList.remove('active');
+        });
+
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.battle-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected category
+        document.getElementById(tabId).classList.add('active');
+
+        // Add active class to clicked button
+        document.querySelector(`[data-battle-tab="${tabId}"]`).classList.add('active');
+    }
+
+    startQuickMatch(matchType) {
+        if (game.player.energy < 20) {
+            game.showNotification('Not enough energy to battle!', 'error');
+            return;
+        }
+
+        const opponentData = this.generateOpponent(matchType);
+        this.startBattle(opponentData, 'quick');
+    }
+
+    generateOpponent(matchType) {
+        const opponents = {
+            street: {
+                name: 'Street Thug',
+                level: Math.floor(Math.random() * 3) + 1,
+                health: 80 + Math.random() * 40,
+                attack: 15 + Math.random() * 10,
+                defense: 5 + Math.random() * 5,
+                avatar: 'fas fa-user',
+                expReward: 50 + Math.random() * 100,
+                moneyReward: 100 + Math.random() * 200
+            },
+            gang: {
+                name: 'Gang Member',
+                level: Math.floor(Math.random() * 5) + 3,
+                health: 120 + Math.random() * 60,
+                attack: 25 + Math.random() * 15,
+                defense: 10 + Math.random() * 10,
+                avatar: 'fas fa-user-ninja',
+                expReward: 100 + Math.random() * 200,
+                moneyReward: 200 + Math.random() * 400
+            },
+            lord: {
+                name: 'Crime Lord',
+                level: Math.floor(Math.random() * 8) + 5,
+                health: 200 + Math.random() * 100,
+                attack: 40 + Math.random() * 20,
+                defense: 20 + Math.random() * 15,
+                avatar: 'fas fa-crown',
+                expReward: 300 + Math.random() * 400,
+                moneyReward: 500 + Math.random() * 1000
+            }
+        };
+
+        return opponents[matchType] || opponents.street;
+    }
+
+    startBattle(opponentData, battleType) {
+        this.currentBattle = {
+            opponent: opponentData,
+            type: battleType,
+            playerHealth: game.player.maxHealth,
+            opponentHealth: opponentData.health,
+            turn: 'player',
+            log: []
+        };
+
+        this.openBattleModal();
+        this.updateBattleDisplay();
+        this.addBattleLog(`Battle begins! You face ${opponentData.name} (Level ${opponentData.level})`);
+    }
+
+    openBattleModal() {
+        const modal = document.getElementById('battle-modal');
+        const opponentName = document.getElementById('opponent-name');
+        const opponentAvatar = document.querySelector('.opponent-fighter .fighter-avatar i');
+
+        opponentName.textContent = this.currentBattle.opponent.name;
+        opponentAvatar.className = this.currentBattle.opponent.avatar;
+
+        document.getElementById('battle-outcome').style.display = 'none';
+        document.getElementById('battle-actions').style.display = 'grid';
+
+        modal.style.display = 'block';
+    }
+
+    updateBattleDisplay() {
+        const playerHealthPercent = (this.currentBattle.playerHealth / game.player.maxHealth) * 100;
+        const opponentHealthPercent = (this.currentBattle.opponentHealth / this.currentBattle.opponent.health) * 100;
+
+        document.getElementById('player-health-fill').style.width = `${playerHealthPercent}%`;
+        document.getElementById('player-health-text').textContent = `${Math.ceil(this.currentBattle.playerHealth)}/${game.player.maxHealth}`;
+
+        document.getElementById('opponent-health-fill').style.width = `${opponentHealthPercent}%`;
+        document.getElementById('opponent-health-text').textContent = `${Math.ceil(this.currentBattle.opponentHealth)}/${this.currentBattle.opponent.health}`;
+    }
+
+    performBattleAction(action) {
+        if (this.currentBattle.turn !== 'player') return;
+
+        switch (action) {
+            case 'attack':
+                this.playerAttack();
+                break;
+            case 'defend':
+                this.playerDefend();
+                break;
+            case 'special':
+                this.playerSpecial();
+                break;
+            case 'flee':
+                this.playerFlee();
+                return;
+        }
+
+        if (this.currentBattle.opponentHealth > 0) {
+            setTimeout(() => {
+                this.opponentTurn();
+            }, 1000);
+        }
+    }
+
+    playerAttack() {
+        const baseDamage = 20 + game.player.skills.strength * 2;
+        const critical = Math.random() < (0.1 + game.player.skills.dexterity * 0.01);
+        const damage = critical ? baseDamage * 1.5 : baseDamage;
+
+        this.currentBattle.opponentHealth -= damage;
+
+        const criticalText = critical ? ' (CRITICAL!)' : '';
+        this.addBattleLog(`You attack for ${Math.ceil(damage)} damage${criticalText}!`);
+
+        if (this.currentBattle.opponentHealth <= 0) {
+            this.endBattle(true);
+        } else {
+            this.updateBattleDisplay();
+        }
+    }
+
+    playerDefend() {
+        this.currentBattle.defending = true;
+        this.addBattleLog('You take a defensive stance, reducing incoming damage by 50%!');
+        this.currentBattle.turn = 'opponent';
+    }
+
+    playerSpecial() {
+        if (game.player.energy < 30) {
+            this.addBattleLog('Not enough energy for special move!');
+            return;
+        }
+
+        game.changeEnergy(-30);
+        const damage = 40 + game.player.skills.combatTraining * 3;
+        this.currentBattle.opponentHealth -= damage;
+
+        this.addBattleLog(`Special move! You deal ${Math.ceil(damage)} damage!`);
+
+        if (this.currentBattle.opponentHealth <= 0) {
+            this.endBattle(true);
+        } else {
+            this.updateBattleDisplay();
+            this.currentBattle.turn = 'opponent';
+        }
+    }
+
+    playerFlee() {
+        const fleeChance = 0.6 + game.player.skills.speed * 0.01;
+        if (Math.random() < fleeChance) {
+            this.addBattleLog('You successfully flee from battle!');
+            this.endBattle(false, true);
+        } else {
+            this.addBattleLog('Failed to flee!');
+            this.currentBattle.turn = 'opponent';
+            setTimeout(() => {
+                this.opponentTurn();
+            }, 1000);
+        }
+    }
+
+    opponentTurn() {
+        const baseDamage = this.currentBattle.opponent.attack;
+        const defense = this.currentBattle.defending ? game.player.skills.defense * 0.5 : game.player.skills.defense;
+        const damage = Math.max(1, baseDamage - defense);
+
+        this.currentBattle.playerHealth -= damage;
+        this.currentBattle.defending = false;
+
+        this.addBattleLog(`${this.currentBattle.opponent.name} attacks for ${Math.ceil(damage)} damage!`);
+
+        if (this.currentBattle.playerHealth <= 0) {
+            this.endBattle(false);
+        } else {
+            this.updateBattleDisplay();
+            this.currentBattle.turn = 'player';
+        }
+    }
+
+    endBattle(victory, fled = false) {
+        document.getElementById('battle-actions').style.display = 'none';
+        document.getElementById('battle-outcome').style.display = 'block';
+
+        const outcomeTitle = document.getElementById('battle-result-title');
+        const outcomeIcon = document.getElementById('battle-outcome-icon');
+        const outcomeMessage = document.getElementById('battle-result-message');
+        const rewardsList = document.getElementById('battle-rewards-list');
+
+        if (fled) {
+            outcomeTitle.textContent = 'Fled!';
+            outcomeIcon.innerHTML = '<i class="fas fa-running"></i>';
+            outcomeIcon.className = 'outcome-icon';
+            outcomeMessage.textContent = 'You escaped from the battle safely.';
+            rewardsList.innerHTML = '';
+        } else if (victory) {
+            outcomeTitle.textContent = 'Victory!';
+            outcomeIcon.innerHTML = '<i class="fas fa-trophy"></i>';
+            outcomeIcon.className = 'outcome-icon success';
+            outcomeMessage.textContent = `You defeated ${this.currentBattle.opponent.name}!`;
+
+            // Give rewards
+            const exp = Math.floor(this.currentBattle.opponent.expReward);
+            const money = Math.floor(this.currentBattle.opponent.moneyReward);
+
+            game.addMoney(money);
+            game.player.experience += exp;
+
+            // Update battle stats
+            game.player.battleStats = game.player.battleStats || { wins: 0, losses: 0, totalExp: 0, totalMoney: 0 };
+            game.player.battleStats.wins++;
+            game.player.battleStats.totalExp += exp;
+            game.player.battleStats.totalMoney += money;
+
+            rewardsList.innerHTML = `
+                <div class="reward-item">+${exp} EXP</div>
+                <div class="reward-item">+$${money}</div>
+            `;
+
+            // Check for level up
+            game.checkLevelUp();
+        } else {
+            outcomeTitle.textContent = 'Defeat!';
+            outcomeIcon.innerHTML = '<i class="fas fa-skull"></i>';
+            outcomeIcon.className = 'outcome-icon failure';
+            outcomeMessage.textContent = `You were defeated by ${this.currentBattle.opponent.name}.`;
+
+            // Update battle stats
+            game.player.battleStats = game.player.battleStats || { wins: 0, losses: 0, totalExp: 0, totalMoney: 0 };
+            game.player.battleStats.losses++;
+
+            rewardsList.innerHTML = '';
+        }
+
+        this.updateBattleStats();
+    }
+
+    addBattleLog(message) {
+        const logElement = document.getElementById('battle-combat-log');
+        const entry = document.createElement('div');
+        entry.className = 'combat-entry';
+        entry.textContent = message;
+
+        logElement.appendChild(entry);
+        logElement.scrollTop = logElement.scrollHeight;
+
+        this.currentBattle.log.push(message);
+    }
+
+    closeBattleModal() {
+        document.getElementById('battle-modal').style.display = 'none';
+        this.currentBattle = null;
+    }
+
+    startTraining(trainingType) {
+        if (trainingType === 'dummy') {
+            // Free training
+            this.addSkillPoints(5, 'accuracy');
+            this.addSkillPoints(3, 'strength');
+            game.showNotification('Training complete! +5 Accuracy, +3 Strength', 'success');
+        } else if (trainingType === 'sparring') {
+            if (game.player.money < 500) {
+                game.showNotification('Not enough money for sparring training!', 'error');
+                return;
+            }
+
+            game.addMoney(-500);
+            this.addSkillPoints(8, 'combatSkills');
+            this.addSkillPoints(5, 'defense');
+            game.showNotification('Sparring training complete! +8 Combat Skills, +5 Defense', 'success');
+        } else if (trainingType === 'strategy') {
+            if (game.player.money < 1000) {
+                game.showNotification('Not enough money for strategy training!', 'error');
+                return;
+            }
+
+            game.addMoney(-1000);
+            this.addSkillPoints(10, 'criticalChance');
+            this.addSkillPoints(6, 'dodgeRate');
+            game.showNotification('Strategy training complete! +10 Critical Chance, +6 Dodge Rate', 'success');
+        }
+
+        // Deduct energy
+        game.changeEnergy(-15);
+    }
+
+    addSkillPoints(points, skill) {
+        if (!game.player.skills[skill]) {
+            game.player.skills[skill] = 0;
+        }
+        game.player.skills[skill] += points;
+    }
+
+    findRankedMatch() {
+        const btn = document.getElementById('find-ranked-match');
+        const status = document.getElementById('matchmaking-status');
+
+        btn.style.display = 'none';
+        status.style.display = 'flex';
+
+        // Simulate matchmaking
+        setTimeout(() => {
+            const opponentData = {
+                name: 'Ranked Opponent',
+                level: Math.floor(game.player.level * 0.8) + Math.random() * (game.player.level * 0.4),
+                health: 150 + Math.random() * 100,
+                attack: 30 + Math.random() * 20,
+                defense: 15 + Math.random() * 15,
+                avatar: 'fas fa-user-secret',
+                expReward: 200 + Math.random() * 300,
+                moneyReward: 300 + Math.random() * 500
+            };
+
+            status.style.display = 'none';
+            btn.style.display = 'inline-flex';
+
+            this.startBattle(opponentData, 'ranked');
+        }, 3000);
+    }
+
+    filterBattleHistory(filter) {
+        // Remove active class from all filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Add active class to clicked button
+        document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+
+        // In a real implementation, this would filter the battle history list
+        // For now, just show the notification
+        game.showNotification(`Filtered battle history: ${filter}`, 'info');
+    }
+
+    updateBattleStats() {
+        const stats = game.player.battleStats || { wins: 0, losses: 0, totalExp: 0, totalMoney: 0 };
+
+        // Calculate win rate
+        const totalBattles = stats.wins + stats.losses;
+        const winRate = totalBattles > 0 ? Math.round((stats.wins / totalBattles) * 100) : 0;
+
+        // Update UI
+        document.getElementById('battle-wins').textContent = stats.wins;
+        document.getElementById('battle-losses').textContent = stats.losses;
+        document.getElementById('battle-win-rate').textContent = `${winRate}%`;
+
+        // Calculate rating (simple formula)
+        const rating = 1200 + (stats.wins * 25) - (stats.losses * 15);
+        document.getElementById('battle-rating').textContent = rating;
+    }
+
+    // Initialize Job System
+    initializeJobSystem() {
+        // Job tab switching
+        document.querySelectorAll('.job-tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tabId = e.currentTarget.dataset.jobTab;
+                this.switchJobTab(tabId);
+            });
+        });
+
+        // Job filters
+        document.getElementById('industry-filter').addEventListener('change', () => this.filterJobs());
+        document.getElementById('experience-filter').addEventListener('change', () => this.filterJobs());
+        document.getElementById('job-search').addEventListener('input', () => this.filterJobs());
+
+        // Work button
+        document.getElementById('work-shift-btn').addEventListener('click', () => this.workShift());
+
+        // Load initial jobs
+        this.loadJobListings();
+
+        // Update job stats
+        this.updateJobStats();
+
+        // Update career progress
+        this.updateCareerProgress();
+    }
+
+    switchJobTab(tabId) {
+        // Hide all job categories
+        document.querySelectorAll('.job-category').forEach(category => {
+            category.classList.remove('active');
+        });
+
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.job-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected category
+        document.getElementById(tabId).classList.add('active');
+
+        // Add active class to clicked button
+        document.querySelector(`[data-job-tab="${tabId}"]`).classList.add('active');
+    }
+
+    loadJobListings() {
+        const jobDatabase = [
+            {
+                id: 'software-dev',
+                title: 'Software Developer',
+                company: 'TechCorp Inc.',
+                salary: 25,
+                hours: 8,
+                experience: 'junior',
+                industry: 'technology',
+                description: 'Develop and maintain web applications using modern technologies.',
+                requirements: ['Basic programming knowledge', 'Problem-solving skills'],
+                benefits: ['Health insurance', 'Flexible hours', 'Remote work options']
+            },
+            {
+                id: 'cashier',
+                title: 'Retail Cashier',
+                company: 'City Mart',
+                salary: 12,
+                hours: 6,
+                experience: 'entry',
+                industry: 'retail',
+                description: 'Handle customer transactions and maintain store inventory.',
+                requirements: ['Basic math skills', 'Customer service experience'],
+                benefits: ['Employee discount', 'Flexible scheduling']
+            },
+            {
+                id: 'mechanic',
+                title: 'Automotive Mechanic',
+                company: 'AutoFix Garage',
+                salary: 18,
+                hours: 8,
+                experience: 'junior',
+                industry: 'construction',
+                description: 'Repair and maintain vehicles for customers.',
+                requirements: ['Mechanical aptitude', 'Basic tool knowledge'],
+                benefits: ['Tool allowance', 'Overtime pay']
+            },
+            {
+                id: 'nurse',
+                title: 'Registered Nurse',
+                company: 'City General Hospital',
+                salary: 32,
+                hours: 12,
+                experience: 'mid',
+                industry: 'healthcare',
+                description: 'Provide patient care and medical assistance.',
+                requirements: ['Nursing degree', 'CPR certification', '2+ years experience'],
+                benefits: ['Health benefits', 'Retirement plan', 'Paid time off']
+            },
+            {
+                id: 'teacher',
+                title: 'High School Teacher',
+                company: 'City Public Schools',
+                salary: 28,
+                hours: 8,
+                experience: 'mid',
+                industry: 'education',
+                description: 'Educate and mentor high school students.',
+                requirements: ['Teaching certification', 'Subject expertise'],
+                benefits: ['Summer vacation', 'Health insurance', 'Professional development']
+            },
+            {
+                id: 'chef',
+                title: 'Line Cook',
+                company: 'Bella Vista Restaurant',
+                salary: 15,
+                hours: 10,
+                experience: 'entry',
+                industry: 'hospitality',
+                description: 'Prepare meals and assist in kitchen operations.',
+                requirements: ['Cooking experience', 'Food safety knowledge'],
+                benefits: ['Free meals', 'Flexible hours']
+            },
+            {
+                id: 'accountant',
+                title: 'Junior Accountant',
+                company: 'Finance Solutions LLC',
+                salary: 22,
+                hours: 8,
+                experience: 'junior',
+                industry: 'finance',
+                description: 'Manage financial records and assist with accounting tasks.',
+                requirements: ['Accounting knowledge', 'Excel proficiency'],
+                benefits: ['Professional certification support', 'Health benefits']
+            },
+            {
+                id: 'construction-worker',
+                title: 'Construction Worker',
+                company: 'BuildRight Construction',
+                salary: 20,
+                hours: 10,
+                experience: 'entry',
+                industry: 'construction',
+                description: 'Assist in building construction and site maintenance.',
+                requirements: ['Physical fitness', 'Basic construction knowledge'],
+                benefits: ['Overtime pay', 'Safety training']
+            }
+        ];
+
+        const grid = document.getElementById('job-listings-grid');
+        grid.innerHTML = '';
+
+        jobDatabase.forEach(job => {
+            const jobCard = document.createElement('div');
+            jobCard.className = 'job-listing-card';
+            jobCard.onclick = () => this.openJobModal(job);
+
+            jobCard.innerHTML = `
+                <div class="job-listing-header">
+                    <h4><i class="fas fa-briefcase"></i> ${job.title}</h4>
+                    <div class="job-listing-salary">$${job.salary}/hr</div>
+                </div>
+                <div class="job-listing-company">${job.company}</div>
+                <p class="job-listing-description">${job.description}</p>
+                <div class="job-listing-details">
+                    <span class="job-detail">${this.capitalizeFirst(job.experience)} Level</span>
+                    <span class="job-detail">${this.capitalizeFirst(job.industry)}</span>
+                    <span class="job-detail">${job.hours} hours/day</span>
+                </div>
+                <button class="apply-btn" onclick="event.stopPropagation(); gameActions.openJobModal(${JSON.stringify(job).replace(/"/g, '&quot;')})">
+                    <i class="fas fa-paper-plane"></i> Apply Now
+                </button>
+            `;
+
+            grid.appendChild(jobCard);
+        });
+    }
+
+    capitalizeFirst(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    filterJobs() {
+        const industryFilter = document.getElementById('industry-filter').value;
+        const experienceFilter = document.getElementById('experience-filter').value;
+        const searchQuery = document.getElementById('job-search').value.toLowerCase();
+
+        const jobCards = document.querySelectorAll('.job-listing-card');
+
+        jobCards.forEach(card => {
+            const jobTitle = card.querySelector('h4').textContent.toLowerCase();
+            const jobCompany = card.querySelector('.job-listing-company').textContent.toLowerCase();
+            const jobDetails = card.querySelectorAll('.job-detail');
+
+            let industryMatch = industryFilter === 'all';
+            let experienceMatch = experienceFilter === 'all';
+            let searchMatch = searchQuery === '' ||
+                jobTitle.includes(searchQuery) ||
+                jobCompany.includes(searchQuery);
+
+            // Check industry and experience filters
+            jobDetails.forEach(detail => {
+                const text = detail.textContent.toLowerCase();
+                if (text.includes(industryFilter.toLowerCase())) industryMatch = true;
+                if (text.includes(experienceFilter.toLowerCase())) experienceMatch = true;
+            });
+
+            if (industryMatch && experienceMatch && searchMatch) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    openJobModal(job) {
+        const modal = document.getElementById('job-modal');
+        const title = document.getElementById('modal-job-title');
+        const company = document.getElementById('modal-job-company');
+        const salary = document.getElementById('modal-job-salary');
+        const hours = document.getElementById('modal-job-hours');
+        const experience = document.getElementById('modal-job-experience');
+        const industry = document.getElementById('modal-job-industry');
+        const description = document.getElementById('modal-job-description');
+        const requirements = document.getElementById('modal-job-requirements');
+        const benefits = document.getElementById('modal-job-benefits');
+
+        title.textContent = job.title;
+        company.textContent = job.company;
+        salary.textContent = `$${job.salary}/hr`;
+        hours.textContent = `${job.hours} hours/day`;
+        experience.textContent = this.capitalizeFirst(job.experience);
+        industry.textContent = this.capitalizeFirst(job.industry);
+        description.textContent = job.description;
+
+        requirements.innerHTML = job.requirements.map(req => `<li>${req}</li>`).join('');
+        benefits.innerHTML = job.benefits.map(benefit => `<li>${benefit}</li>`).join('');
+
+        // Store job data for application
+        document.getElementById('submit-application-btn').dataset.jobData = JSON.stringify(job);
+
+        modal.style.display = 'block';
+    }
+
+    submitJobApplication() {
+        const btn = document.getElementById('submit-application-btn');
+        const jobData = JSON.parse(btn.dataset.jobData);
+
+        // Add to applications list
+        this.addToApplications(jobData);
+
+        // Close modal
+        this.closeJobModal();
+
+        game.showNotification(`Application submitted for ${jobData.title} at ${jobData.company}!`, 'success');
+    }
+
+    addToApplications(job) {
+        const applicationsList = document.getElementById('applications-list');
+
+        // Remove "no applications" message if it exists
+        const noApps = applicationsList.querySelector('.no-applications');
+        if (noApps) {
+            noApps.remove();
+        }
+
+        const applicationItem = document.createElement('div');
+        applicationItem.className = 'application-item';
+        applicationItem.innerHTML = `
+            <div class="application-header">
+                <h4>${job.title}</h4>
+                <span class="application-status pending">Pending Review</span>
+            </div>
+            <div class="application-company">${job.company}</div>
+            <div class="application-details">
+                <span>Applied: ${new Date().toLocaleDateString()}</span>
+                <span>Expected Response: 2-3 business days</span>
+            </div>
+        `;
+
+        applicationsList.appendChild(applicationItem);
+    }
+
+    workShift() {
+        if (!game.player.currentJob) {
+            game.showNotification('You need a job first!', 'error');
+            return;
+        }
+
+        if (game.player.energy < 20) {
+            game.showNotification('Not enough energy to work!', 'error');
+            return;
+        }
+
+        const job = game.player.currentJob;
+        const hoursWorked = Math.min(job.hoursPerDay, 8); // Max 8 hours per shift
+        const earnings = job.hourlyRate * hoursWorked;
+
+        // Deduct energy
+        game.changeEnergy(-20);
+
+        // Add money
+        game.addMoney(earnings);
+
+        // Update job stats
+        game.player.jobStats = game.player.jobStats || { totalEarnings: 0, hoursWorked: 0, daysWorked: 0 };
+        game.player.jobStats.totalEarnings += earnings;
+        game.player.jobStats.hoursWorked += hoursWorked;
+        game.player.jobStats.daysWorked = (game.player.jobStats.daysWorked || 0) + 1;
+
+        // Update today's earnings
+        game.player.jobTodayEarnings = (game.player.jobTodayEarnings || 0) + earnings;
+        game.player.jobTodayHours = (game.player.jobTodayHours || 0) + hoursWorked;
+
+        // Gain experience
+        const expGain = Math.floor(hoursWorked * 2);
+        game.player.jobExperience = (game.player.jobExperience || 0) + expGain;
+
+        // Check for promotion
+        this.checkForPromotion();
+
+        // Update UI
+        this.updateJobDisplay();
+
+        game.showNotification(`Worked ${hoursWorked} hours and earned $${earnings}!`, 'success');
+    }
+
+    checkForPromotion() {
+        const job = game.player.currentJob;
+        const currentLevel = this.getCareerLevel();
+        const nextLevel = this.getNextCareerLevel(currentLevel);
+
+        if (nextLevel && game.player.jobExperience >= nextLevel.requirements.xp &&
+            game.player.jobStats.promotions >= nextLevel.requirements.promotions) {
+            // Promote player
+            game.player.careerLevel = nextLevel.level;
+            game.player.jobStats.promotions = (game.player.jobStats.promotions || 0) + 1;
+
+            // Increase salary
+            job.hourlyRate = Math.floor(job.hourlyRate * 1.2);
+
+            game.showNotification(`Congratulations! You've been promoted to ${nextLevel.name}!`, 'success');
+        }
+    }
+
+    getCareerLevel() {
+        return game.player.careerLevel || 'entry';
+    }
+
+    getNextCareerLevel(currentLevel) {
+        const levels = {
+            entry: { level: 'junior', name: 'Junior Level', requirements: { xp: 1000, promotions: 1 } },
+            junior: { level: 'mid', name: 'Mid Level', requirements: { xp: 5000, promotions: 3 } },
+            mid: { level: 'senior', name: 'Senior Level', requirements: { xp: 15000, promotions: 5 } },
+            senior: { level: 'executive', name: 'Executive Level', requirements: { xp: 50000, promotions: 8 } }
+        };
+
+        return levels[currentLevel];
+    }
+
+    quitCurrentJob() {
+        if (confirm('Are you sure you want to quit your job?')) {
+            game.player.currentJob = null;
+            game.player.jobTodayEarnings = 0;
+            game.player.jobTodayHours = 0;
+
+            this.updateJobDisplay();
+            game.showNotification('You have quit your job.', 'info');
+        }
+    }
+
+    updateJobDisplay() {
+        const currentDisplay = document.getElementById('current-job-display');
+        const activeDisplay = document.getElementById('active-job-display');
+
+        if (game.player.currentJob) {
+            currentDisplay.style.display = 'none';
+            activeDisplay.style.display = 'block';
+
+            const job = game.player.currentJob;
+            document.getElementById('active-job-title').textContent = job.title;
+            document.getElementById('active-job-company').textContent = job.company;
+            document.getElementById('active-job-rate').textContent = `$${job.hourlyRate}/hr`;
+            document.getElementById('active-job-hours-today').textContent = `${game.player.jobTodayHours || 0}/${job.hoursPerDay}`;
+            document.getElementById('active-job-earnings-today').textContent = `$${game.player.jobTodayEarnings || 0}`;
+
+            // Update progress bar
+            const currentLevel = this.getCareerLevel();
+            const nextLevel = this.getNextCareerLevel(currentLevel);
+            if (nextLevel) {
+                const progress = Math.min(100, (game.player.jobExperience / nextLevel.requirements.xp) * 100);
+                document.getElementById('job-progress-fill').style.width = `${progress}%`;
+                document.getElementById('job-progress-text').textContent = `${game.player.jobExperience}/${nextLevel.requirements.xp} XP`;
+            }
+        } else {
+            currentDisplay.style.display = 'block';
+            activeDisplay.style.display = 'none';
+        }
+    }
+
+    updateJobStats() {
+        const stats = game.player.jobStats || { totalEarnings: 0, hoursWorked: 0, daysWorked: 0, promotions: 0 };
+
+        document.getElementById('job-total-earnings').textContent = `$${stats.totalEarnings.toLocaleString()}`;
+        document.getElementById('job-hours-worked').textContent = stats.hoursWorked;
+        document.getElementById('job-promotions').textContent = stats.promotions;
+
+        const careerLevel = this.getCareerLevel();
+        const levelNames = {
+            entry: 'Entry Level',
+            junior: 'Junior Level',
+            mid: 'Mid Level',
+            senior: 'Senior Level',
+            executive: 'Executive Level'
+        };
+
+        document.getElementById('job-career-level').textContent = levelNames[careerLevel] || 'Entry Level';
+    }
+
+    updateCareerProgress() {
+        const careerLevels = ['entry', 'junior', 'mid', 'senior', 'executive'];
+        const currentLevel = this.getCareerLevel();
+        const currentIndex = careerLevels.indexOf(currentLevel);
+
+        careerLevels.forEach((level, index) => {
+            const node = document.getElementById(`${level}-level-status`);
+            if (index < currentIndex) {
+                node.className = 'node-status unlocked';
+                node.textContent = 'unlocked';
+            } else if (index === currentIndex) {
+                node.className = 'node-status current';
+                node.textContent = 'current';
+            } else {
+                node.className = 'node-status locked';
+                node.textContent = 'locked';
+            }
+        });
+    }
+
+    closeJobModal() {
+        document.getElementById('job-modal').style.display = 'none';
+    }
+
+    // Initialize Market System
+    initializeMarketSystem() {
+        // Market tab switching
+        document.querySelectorAll('.market-tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tabId = e.currentTarget.dataset.marketTab;
+                this.switchMarketTab(tabId);
+            });
+        });
+
+        // Inventory tab switching
+        document.querySelectorAll('.inventory-tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const category = e.currentTarget.dataset.inventory;
+                this.filterInventory(category);
+            });
+        });
+
+        // Drug collection
+        document.getElementById('collect-drugs-btn').addEventListener('click', () => {
+            this.openDrugCollectionModal();
+        });
+
+        // Zone selection for drug collection
+        document.querySelectorAll('.zone-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const zone = e.currentTarget.dataset.zone;
+                this.collectDrugs(zone);
+            });
+        });
+
+        // Filters
+        this.setupMarketFilters();
+
+        // Load initial market data
+        this.loadMarketData();
+        this.updateMarketStats();
+    }
+
+    switchMarketTab(tabId) {
+        // Hide all market categories
+        document.querySelectorAll('.market-category').forEach(category => {
+            category.classList.remove('active');
+        });
+
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.market-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected category
+        document.getElementById(tabId).classList.add('active');
+
+        // Add active class to clicked button
+        document.querySelector(`[data-market-tab="${tabId}"]`).classList.add('active');
+    }
+
+    setupMarketFilters() {
+        // Weapon filters
+        document.getElementById('weapon-type-filter').addEventListener('change', () => this.filterWeapons());
+        document.getElementById('weapon-quality-filter').addEventListener('change', () => this.filterWeapons());
+        document.getElementById('weapon-search').addEventListener('input', () => this.filterWeapons());
+
+        // Drug filters
+        document.getElementById('drug-type-filter').addEventListener('change', () => this.filterDrugs());
+        document.getElementById('drug-purity-filter').addEventListener('change', () => this.filterDrugs());
+
+        // Vehicle filters
+        document.getElementById('vehicle-type-filter').addEventListener('change', () => this.filterVehicles());
+        document.getElementById('vehicle-condition-filter').addEventListener('change', () => this.filterVehicles());
+
+        // Property filters
+        document.getElementById('property-type-filter').addEventListener('change', () => this.filterProperties());
+        document.getElementById('property-location-filter').addEventListener('change', () => this.filterProperties());
+    }
+
+    loadMarketData() {
+        this.loadWeapons();
+        this.loadDrugs();
+        this.loadVehicles();
+        this.loadProperties();
+        this.loadInventory();
+        this.loadAuctions();
+    }
+
+    loadWeapons() {
+        const weapons = [
+            {
+                id: 'combat-knife',
+                name: 'Combat Knife',
+                type: 'melee',
+                quality: 'standard',
+                damage: 25,
+                durability: 100,
+                price: 150,
+                description: 'A reliable combat knife for close-quarters combat.',
+                icon: 'fas fa-knife'
+            },
+            {
+                id: 'glock-19',
+                name: 'Glock 19',
+                type: 'firearm',
+                quality: 'standard',
+                damage: 45,
+                durability: 85,
+                price: 450,
+                description: 'A compact 9mm pistol, reliable and easy to conceal.',
+                icon: 'fas fa-gun'
+            },
+            {
+                id: 'ak-47',
+                name: 'AK-47',
+                type: 'firearm',
+                quality: 'premium',
+                damage: 75,
+                durability: 90,
+                price: 1200,
+                description: 'A powerful assault rifle known for its reliability.',
+                icon: 'fas fa-crosshairs'
+            },
+            {
+                id: 'kevlar-vest',
+                name: 'Kevlar Vest',
+                type: 'armor',
+                quality: 'standard',
+                armor: 30,
+                durability: 95,
+                price: 300,
+                description: 'Bullet-resistant vest that reduces incoming damage.',
+                icon: 'fas fa-shield-alt'
+            },
+            {
+                id: 'frag-grenade',
+                name: 'Frag Grenade',
+                type: 'explosive',
+                quality: 'standard',
+                damage: 100,
+                durability: 100,
+                price: 200,
+                description: 'High-explosive grenade for area denial.',
+                icon: 'fas fa-bomb'
+            }
+        ];
+
+        const grid = document.getElementById('weapons-grid');
+        grid.innerHTML = '';
+
+        weapons.forEach(weapon => {
+            const weaponCard = document.createElement('div');
+            weaponCard.className = 'market-item-card weapon-card';
+            weaponCard.onclick = () => this.openItemModal(weapon, 'weapons');
+
+            weaponCard.innerHTML = `
+                <div class="item-icon">
+                    <i class="${weapon.icon}"></i>
+                </div>
+                <div class="item-info">
+                    <h4>${weapon.name}</h4>
+                    <div class="item-type">${weapon.type} • ${weapon.quality}</div>
+                    <div class="item-stats">
+                        ${weapon.damage ? `<span>DMG: ${weapon.damage}</span>` : ''}
+                        ${weapon.armor ? `<span>ARM: ${weapon.armor}</span>` : ''}
+                        <span>DUR: ${weapon.durability}%</span>
+                    </div>
+                </div>
+                <div class="item-price">$${weapon.price}</div>
+            `;
+
+            grid.appendChild(weaponCard);
+        });
+    }
+
+    loadDrugs() {
+        const drugs = [
+            {
+                id: 'cocaine',
+                name: 'Cocaine',
+                type: 'stimulant',
+                purity: 'high',
+                quantity: 100,
+                price: 800,
+                effects: ['+50 Energy', '+20 Speed', '-10 Health over time'],
+                description: 'High-quality cocaine that boosts energy and speed.',
+                icon: 'fas fa-snowflake'
+            },
+            {
+                id: 'heroin',
+                name: 'Heroin',
+                type: 'depressant',
+                purity: 'pure',
+                quantity: 50,
+                price: 1200,
+                effects: ['Pain relief', '+30 Health', 'High addiction risk'],
+                description: 'Pure heroin with strong analgesic properties.',
+                icon: 'fas fa-syringe'
+            },
+            {
+                id: 'marijuana',
+                name: 'Marijuana',
+                type: 'hallucinogen',
+                purity: 'medium',
+                quantity: 200,
+                price: 150,
+                effects: ['Relaxation', '+10 Energy', 'Mild euphoria'],
+                description: 'Quality marijuana for recreational use.',
+                icon: 'fas fa-leaf'
+            },
+            {
+                id: 'methamphetamine',
+                name: 'Methamphetamine',
+                type: 'stimulant',
+                purity: 'pure',
+                quantity: 25,
+                price: 600,
+                effects: ['+80 Energy', '+40 Speed', 'High health risk'],
+                description: 'Pure crystal meth with extreme stimulating effects.',
+                icon: 'fas fa-diamond'
+            }
+        ];
+
+        const grid = document.getElementById('drugs-grid');
+        grid.innerHTML = '';
+
+        drugs.forEach(drug => {
+            const drugCard = document.createElement('div');
+            drugCard.className = 'market-item-card drug-card';
+            drugCard.onclick = () => this.openItemModal(drug, 'drugs');
+
+            drugCard.innerHTML = `
+                <div class="item-icon">
+                    <i class="${drug.icon}"></i>
+                </div>
+                <div class="item-info">
+                    <h4>${drug.name}</h4>
+                    <div class="item-type">${drug.type} • ${drug.purity} purity</div>
+                    <div class="item-stats">
+                        <span>QTY: ${drug.quantity}g</span>
+                        <span>$${drug.price}/g</span>
+                    </div>
+                </div>
+                <div class="item-price">$${drug.price * drug.quantity}</div>
+            `;
+
+            grid.appendChild(drugCard);
+        });
+    }
+
+    loadVehicles() {
+        const vehicles = [
+            {
+                id: 'honda-civic',
+                name: 'Honda Civic',
+                type: 'sedan',
+                condition: 'used',
+                speed: 140,
+                handling: 70,
+                price: 8000,
+                description: 'Reliable used sedan for everyday transportation.',
+                icon: 'fas fa-car'
+            },
+            {
+                id: 'chevrolet-silverado',
+                name: 'Chevrolet Silverado',
+                type: 'truck',
+                condition: 'new',
+                speed: 120,
+                handling: 60,
+                price: 35000,
+                description: 'Heavy-duty pickup truck for hauling cargo.',
+                icon: 'fas fa-truck'
+            },
+            {
+                id: 'harley-davidson',
+                name: 'Harley-Davidson Sportster',
+                type: 'motorcycle',
+                condition: 'used',
+                speed: 160,
+                handling: 90,
+                price: 12000,
+                description: 'Classic motorcycle for quick getaways.',
+                icon: 'fas fa-motorcycle'
+            },
+            {
+                id: 'lamborghini-huracan',
+                name: 'Lamborghini Huracan',
+                type: 'luxury',
+                condition: 'new',
+                speed: 220,
+                handling: 95,
+                price: 250000,
+                description: 'Exotic supercar for showing off wealth.',
+                icon: 'fas fa-car-side'
+            }
+        ];
+
+        const grid = document.getElementById('vehicles-grid');
+        grid.innerHTML = '';
+
+        vehicles.forEach(vehicle => {
+            const vehicleCard = document.createElement('div');
+            vehicleCard.className = 'market-item-card vehicle-card';
+            vehicleCard.onclick = () => this.openItemModal(vehicle, 'vehicles');
+
+            vehicleCard.innerHTML = `
+                <div class="item-icon">
+                    <i class="${vehicle.icon}"></i>
+                </div>
+                <div class="item-info">
+                    <h4>${vehicle.name}</h4>
+                    <div class="item-type">${vehicle.type} • ${vehicle.condition}</div>
+                    <div class="item-stats">
+                        <span>SPD: ${vehicle.speed}mph</span>
+                        <span>HDL: ${vehicle.handling}</span>
+                    </div>
+                </div>
+                <div class="item-price">$${vehicle.price.toLocaleString()}</div>
+            `;
+
+            grid.appendChild(vehicleCard);
+        });
+    }
+
+    loadProperties() {
+        const properties = [
+            {
+                id: 'downtown-apartment',
+                name: 'Downtown Apartment',
+                type: 'apartment',
+                location: 'downtown',
+                size: 800,
+                rooms: 2,
+                price: 150000,
+                income: 800,
+                description: 'Modern apartment in the city center.',
+                icon: 'fas fa-building'
+            },
+            {
+                id: 'suburban-house',
+                name: 'Suburban House',
+                type: 'house',
+                location: 'suburbs',
+                size: 2000,
+                rooms: 4,
+                price: 350000,
+                income: 1200,
+                description: 'Family home in quiet suburban neighborhood.',
+                icon: 'fas fa-home'
+            },
+            {
+                id: 'warehouse-space',
+                name: 'Industrial Warehouse',
+                type: 'warehouse',
+                location: 'industrial',
+                size: 5000,
+                rooms: 1,
+                price: 500000,
+                income: 2500,
+                description: 'Large warehouse perfect for storage operations.',
+                icon: 'fas fa-warehouse'
+            },
+            {
+                id: 'luxury-penthouse',
+                name: 'Skyline Penthouse',
+                type: 'luxury',
+                location: 'downtown',
+                size: 3000,
+                rooms: 5,
+                price: 2000000,
+                income: 5000,
+                description: 'Luxurious penthouse with city views.',
+                icon: 'fas fa-crown'
+            }
+        ];
+
+        const grid = document.getElementById('properties-grid');
+        grid.innerHTML = '';
+
+        properties.forEach(property => {
+            const propertyCard = document.createElement('div');
+            propertyCard.className = 'market-item-card property-card';
+            propertyCard.onclick = () => this.openItemModal(property, 'properties');
+
+            propertyCard.innerHTML = `
+                <div class="item-icon">
+                    <i class="${property.icon}"></i>
+                </div>
+                <div class="item-info">
+                    <h4>${property.name}</h4>
+                    <div class="item-type">${property.location} • ${property.type}</div>
+                    <div class="item-stats">
+                        <span>${property.rooms} rooms</span>
+                        <span>${property.size} sqft</span>
+                        <span>+$${property.income}/day</span>
+                    </div>
+                </div>
+                <div class="item-price">$${property.price.toLocaleString()}</div>
+            `;
+
+            grid.appendChild(propertyCard);
+        });
+    }
+
+    loadInventory() {
+        // Initialize player inventory if it doesn't exist
+        if (!game.player.inventory) {
+            game.player.inventory = {
+                weapons: [],
+                drugs: [],
+                vehicles: [],
+                properties: []
+            };
+        }
+
+        this.updateInventoryDisplay();
+    }
+
+    loadAuctions() {
+        const auctions = [
+            {
+                id: 'rare-diamond',
+                name: 'Rare Diamond Necklace',
+                currentBid: 50000,
+                buyout: 75000,
+                timeLeft: '2h 15m',
+                bidders: 8
+            },
+            {
+                id: 'stolen-painting',
+                name: 'Stolen Masterpiece',
+                currentBid: 150000,
+                buyout: 200000,
+                timeLeft: '5h 30m',
+                bidders: 12
+            }
+        ];
+
+        const grid = document.getElementById('auction-items');
+        grid.innerHTML = '';
+
+        auctions.forEach(auction => {
+            const auctionCard = document.createElement('div');
+            auctionCard.className = 'auction-item-card';
+
+            auctionCard.innerHTML = `
+                <div class="auction-header">
+                    <h4>${auction.name}</h4>
+                    <span class="auction-time">${auction.timeLeft}</span>
+                </div>
+                <div class="auction-details">
+                    <div class="auction-stat">
+                        <span class="label">Current Bid:</span>
+                        <span class="value">$${auction.currentBid.toLocaleString()}</span>
+                    </div>
+                    <div class="auction-stat">
+                        <span class="label">Buyout:</span>
+                        <span class="value">$${auction.buyout.toLocaleString()}</span>
+                    </div>
+                    <div class="auction-stat">
+                        <span class="label">Bidders:</span>
+                        <span class="value">${auction.bidders}</span>
+                    </div>
+                </div>
+                <div class="auction-actions">
+                    <button class="bid-btn">Place Bid</button>
+                    <button class="buyout-btn">Buyout</button>
+                </div>
+            `;
+
+            grid.appendChild(auctionCard);
+        });
+    }
+
+    filterWeapons() {
+        const typeFilter = document.getElementById('weapon-type-filter').value;
+        const qualityFilter = document.getElementById('weapon-quality-filter').value;
+        const searchQuery = document.getElementById('weapon-search').value.toLowerCase();
+
+        const weaponCards = document.querySelectorAll('#weapons-grid .market-item-card');
+
+        weaponCards.forEach(card => {
+            const name = card.querySelector('h4').textContent.toLowerCase();
+            const type = card.querySelector('.item-type').textContent.toLowerCase();
+            const matchesType = typeFilter === 'all' || type.includes(typeFilter);
+            const matchesQuality = qualityFilter === 'all' || type.includes(qualityFilter);
+            const matchesSearch = searchQuery === '' || name.includes(searchQuery);
+
+            if (matchesType && matchesQuality && matchesSearch) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    filterDrugs() {
+        const typeFilter = document.getElementById('drug-type-filter').value;
+        const purityFilter = document.getElementById('drug-purity-filter').value;
+
+        const drugCards = document.querySelectorAll('#drugs-grid .market-item-card');
+
+        drugCards.forEach(card => {
+            const type = card.querySelector('.item-type').textContent.toLowerCase();
+            const matchesType = typeFilter === 'all' || type.includes(typeFilter);
+            const matchesPurity = purityFilter === 'all' || type.includes(purityFilter);
+
+            if (matchesType && matchesPurity) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    filterVehicles() {
+        const typeFilter = document.getElementById('vehicle-type-filter').value;
+        const conditionFilter = document.getElementById('vehicle-condition-filter').value;
+
+        const vehicleCards = document.querySelectorAll('#vehicles-grid .market-item-card');
+
+        vehicleCards.forEach(card => {
+            const type = card.querySelector('.item-type').textContent.toLowerCase();
+            const matchesType = typeFilter === 'all' || type.includes(typeFilter);
+            const matchesCondition = conditionFilter === 'all' || type.includes(conditionFilter);
+
+            if (matchesType && matchesCondition) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    filterProperties() {
+        const typeFilter = document.getElementById('property-type-filter').value;
+        const locationFilter = document.getElementById('property-location-filter').value;
+
+        const propertyCards = document.querySelectorAll('#properties-grid .market-item-card');
+
+        propertyCards.forEach(card => {
+            const type = card.querySelector('.item-type').textContent.toLowerCase();
+            const matchesType = typeFilter === 'all' || type.includes(typeFilter);
+            const matchesLocation = locationFilter === 'all' || type.includes(locationFilter);
+
+            if (matchesType && matchesLocation) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    filterInventory(category) {
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.inventory-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Add active class to clicked button
+        document.querySelector(`[data-inventory="${category}"]`).classList.add('active');
+
+        // Filter inventory display
+        this.updateInventoryDisplay(category);
+    }
+
+    openItemModal(item, category) {
+        const modal = document.getElementById('item-modal');
+        const title = document.getElementById('item-modal-title');
+        const icon = document.getElementById('item-icon');
+        const name = document.getElementById('item-name');
+        const categoryEl = document.getElementById('item-category');
+        const price = document.getElementById('item-price');
+        const type = document.getElementById('item-type');
+        const quality = document.getElementById('item-quality');
+        const durability = document.getElementById('item-durability');
+        const damageRow = document.getElementById('item-damage-row');
+        const armorRow = document.getElementById('item-armor-row');
+        const description = document.getElementById('item-description');
+        const effects = document.getElementById('item-effects');
+        const effectsList = document.getElementById('item-effects-list');
+        const purchaseBtn = document.getElementById('purchase-item-btn');
+        const sellBtn = document.getElementById('sell-item-btn');
+
+        title.textContent = category === 'inventory' ? 'Item Details' : 'Purchase Item';
+        icon.innerHTML = `<i class="${item.icon}"></i>`;
+        name.textContent = item.name;
+        categoryEl.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+        price.textContent = `$${item.price.toLocaleString()}`;
+
+        type.textContent = item.type || 'Unknown';
+        quality.textContent = item.quality || 'Standard';
+        durability.textContent = `${item.durability || 100}%`;
+
+        // Show/hide damage and armor rows
+        if (item.damage) {
+            damageRow.style.display = 'block';
+            document.getElementById('item-damage').textContent = item.damage;
+        } else {
+            damageRow.style.display = 'none';
+        }
+
+        if (item.armor) {
+            armorRow.style.display = 'block';
+            document.getElementById('item-armor').textContent = item.armor;
+        } else {
+            armorRow.style.display = 'none';
+        }
+
+        description.textContent = item.description;
+
+        // Show effects for drugs
+        if (item.effects) {
+            effects.style.display = 'block';
+            effectsList.innerHTML = item.effects.map(effect => `<li>${effect}</li>`).join('');
+        } else {
+            effects.style.display = 'none';
+        }
+
+        // Set button actions
+        if (category === 'inventory') {
+            purchaseBtn.style.display = 'none';
+            sellBtn.style.display = 'block';
+            sellBtn.onclick = () => this.sellItem(item);
+        } else {
+            purchaseBtn.style.display = 'block';
+            sellBtn.style.display = 'none';
+            purchaseBtn.onclick = () => this.purchaseItem(item, category);
+        }
+
+        modal.style.display = 'block';
+    }
+
+    purchaseItem(item, category) {
+        if (game.player.money < item.price) {
+            game.showNotification('Not enough money!', 'error');
+            return;
+        }
+
+        // Deduct money
+        game.addMoney(-item.price);
+
+        // Add to inventory
+        if (!game.player.inventory[category]) {
+            game.player.inventory[category] = [];
+        }
+        game.player.inventory[category].push(item);
+
+        // Close modal
+        this.closeItemModal();
+
+        // Update displays
+        this.updateInventoryDisplay();
+        this.updateMarketStats();
+
+        game.showNotification(`Purchased ${item.name}!`, 'success');
+    }
+
+    sellItem(item) {
+        // Add money (sell for 60% of purchase price)
+        const sellPrice = Math.floor(item.price * 0.6);
+        game.addMoney(sellPrice);
+
+        // Remove from inventory
+        Object.keys(game.player.inventory).forEach(category => {
+            game.player.inventory[category] = game.player.inventory[category].filter(
+                invItem => invItem.id !== item.id
+            );
+        });
+
+        // Close modal
+        this.closeItemModal();
+
+        // Update displays
+        this.updateInventoryDisplay();
+        this.updateMarketStats();
+
+        game.showNotification(`Sold ${item.name} for $${sellPrice}!`, 'success');
+    }
+
+    updateInventoryDisplay(filter = 'all') {
+        const inventory = game.player.inventory;
+        const grid = document.getElementById('inventory-grid');
+
+        if (!inventory || Object.values(inventory).every(arr => arr.length === 0)) {
+            grid.innerHTML = `
+                <div class="empty-inventory">
+                    <i class="fas fa-box-open"></i>
+                    <h4>Your inventory is empty</h4>
+                    <p>Purchase items from the market to see them here.</p>
+                </div>
+            `;
+            this.updateInventoryStats(0, 0);
+            return;
+        }
+
+        let allItems = [];
+        let totalValue = 0;
+        let itemCount = 0;
+
+        Object.entries(inventory).forEach(([category, items]) => {
+            items.forEach(item => {
+                if (filter === 'all' || category === filter) {
+                    allItems.push({ ...item, category });
+                    totalValue += item.price;
+                    itemCount++;
+                }
+            });
+        });
+
+        grid.innerHTML = '';
+
+        allItems.forEach(item => {
+            const itemCard = document.createElement('div');
+            itemCard.className = 'inventory-item-card';
+            itemCard.onclick = () => this.openItemModal(item, 'inventory');
+
+            itemCard.innerHTML = `
+                <div class="item-icon">
+                    <i class="${item.icon}"></i>
+                </div>
+                <div class="item-info">
+                    <h4>${item.name}</h4>
+                    <div class="item-category">${item.category}</div>
+                    <div class="item-stats">
+                        ${item.damage ? `<span>DMG: ${item.damage}</span>` : ''}
+                        ${item.armor ? `<span>ARM: ${item.armor}</span>` : ''}
+                        <span>DUR: ${item.durability || 100}%</span>
+                    </div>
+                </div>
+                <div class="item-value">$${item.price.toLocaleString()}</div>
+            `;
+
+            grid.appendChild(itemCard);
+        });
+
+        this.updateInventoryStats(totalValue, itemCount);
+    }
+
+    updateInventoryStats(totalValue, itemCount) {
+        document.getElementById('inventory-value').textContent = `$${totalValue.toLocaleString()}`;
+        document.getElementById('storage-used').textContent = `${itemCount}/100`;
+        document.getElementById('items-count').textContent = itemCount;
+    }
+
+    openDrugCollectionModal() {
+        document.getElementById('drug-collection-modal').style.display = 'block';
+    }
+
+    closeDrugCollectionModal() {
+        document.getElementById('drug-collection-modal').style.display = 'none';
+        document.getElementById('collection-result').style.display = 'none';
+        document.querySelector('.collection-zones').style.display = 'block';
+    }
+
+    collectDrugs(zone) {
+        if (game.player.energy < 30) {
+            game.showNotification('Not enough energy to collect drugs!', 'error');
+            return;
+        }
+
+        // Calculate success and rewards based on zone
+        const zoneData = {
+            downtown: { risk: 'low', quality: 'medium', reward: [200, 500] },
+            slums: { risk: 'high', quality: 'high', reward: [500, 1200] },
+            docks: { risk: 'medium', quality: 'low', reward: [300, 800] },
+            warehouse: { risk: 'very high', quality: 'premium', reward: [800, 2000] }
+        };
+
+        const data = zoneData[zone];
+        const successChance = data.risk === 'low' ? 0.8 : data.risk === 'medium' ? 0.6 : data.risk === 'high' ? 0.4 : 0.2;
+        const success = Math.random() < successChance;
+
+        // Hide zones, show result
+        document.querySelector('.collection-zones').style.display = 'none';
+        document.getElementById('collection-result').style.display = 'block';
+
+        if (success) {
+            const reward = Math.floor(Math.random() * (data.reward[1] - data.reward[0])) + data.reward[0];
+
+            // Generate random drug
+            const drugs = ['Cocaine', 'Heroin', 'Marijuana', 'Methamphetamine'];
+            const drug = drugs[Math.floor(Math.random() * drugs.length)];
+            const quantity = Math.floor(Math.random() * 50) + 10;
+
+            // Add drug to inventory
+            const drugItem = {
+                id: `collected-${Date.now()}`,
+                name: `${drug} (${quantity}g)`,
+                type: 'stimulant',
+                purity: data.quality,
+                quantity: quantity,
+                price: reward,
+                description: `Collected ${drug.toLowerCase()} from ${zone}.`,
+                icon: 'fas fa-pills'
+            };
+
+            if (!game.player.inventory.drugs) {
+                game.player.inventory.drugs = [];
+            }
+            game.player.inventory.drugs.push(drugItem);
+
+            // Add money
+            game.addMoney(reward);
+
+            // Deduct energy
+            game.changeEnergy(-30);
+
+            document.getElementById('result-details').innerHTML = `
+                <div class="collection-success">
+                    <h4>Collection Successful!</h4>
+                    <p>You collected ${quantity}g of ${drug} from the ${zone}.</p>
+                    <p>Sold for $${reward} on the black market.</p>
+                    <div class="reward-item">+$${reward}</div>
+                    <div class="reward-item">+${drugItem.name}</div>
+                </div>
+            `;
+        } else {
+            // Failure - possible consequences
+            const consequences = [
+                'The deal went bad! You lost some money.',
+                'Police raid! You barely escaped.',
+                'Rival gang stole your drugs!'
+            ];
+            const consequence = consequences[Math.floor(Math.random() * consequences.length)];
+
+            // Small money loss
+            const loss = Math.floor(Math.random() * 200) + 50;
+            game.addMoney(-loss);
+
+            // Deduct energy
+            game.changeEnergy(-30);
+
+            document.getElementById('result-details').innerHTML = `
+                <div class="collection-failure">
+                    <h4>Collection Failed!</h4>
+                    <p>${consequence}</p>
+                    <div class="penalty-item">-$${loss}</div>
+                </div>
+            `;
+        }
+
+        this.updateInventoryDisplay();
+        this.updateMarketStats();
+    }
+
+    updateMarketStats() {
+        const inventory = game.player.inventory;
+        let totalValue = 0;
+        let itemCount = 0;
+
+        if (inventory) {
+            Object.values(inventory).forEach(items => {
+                items.forEach(item => {
+                    totalValue += item.price;
+                    itemCount++;
+                });
+            });
+        }
+
+        document.getElementById('market-value').textContent = `$${totalValue.toLocaleString()}`;
+        document.getElementById('items-owned').textContent = itemCount;
+
+        // Calculate market index (simulated fluctuation)
+        const marketIndex = (1.0 + (Math.random() - 0.5) * 0.4).toFixed(1);
+        document.getElementById('market-index').textContent = `${marketIndex}x`;
+
+        // Calculate risk level based on inventory value and recent activity
+        let riskLevel = 'Low';
+        if (totalValue > 100000) riskLevel = 'Medium';
+        if (totalValue > 500000) riskLevel = 'High';
+        if (totalValue > 1000000) riskLevel = 'Very High';
+
+        document.getElementById('market-risk').textContent = riskLevel;
+    }
+
+    closeItemModal() {
+        document.getElementById('item-modal').style.display = 'none';
+    }
+
+    // Legacy handleCrime method for backward compatibility
     handleCrime(crime) {
         if (game.player.energy < 10) {
             game.showNotification('Not enough energy to commit crimes!', 'error');
@@ -4387,6 +6574,1800 @@ class GameActions {
         if (window.autoSave) {
             window.autoSave.saveInventory(game.player.items[category], category, 'sell');
         }
+    }
+
+    // Settings Panel System
+    initializeSettingsPanel() {
+        const settingsTabs = document.querySelectorAll('.settings-tab-btn');
+        settingsTabs.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchSettingsTab(e.target.dataset.tab);
+            });
+        });
+
+        // Load initial settings
+        this.loadSettings();
+
+        // Settings action buttons
+        document.getElementById('saveSettingsBtn')?.addEventListener('click', () => this.saveSettings());
+        document.getElementById('resetSettingsBtn')?.addEventListener('click', () => this.resetToDefaults());
+        document.getElementById('changePasswordBtn')?.addEventListener('click', () => this.changePassword());
+        document.getElementById('exportDataBtn')?.addEventListener('click', () => this.exportGameData());
+        document.getElementById('resetProgressBtn')?.addEventListener('click', () => this.resetGameProgress());
+        document.getElementById('deleteAccountBtn')?.addEventListener('click', () => this.deleteAccount());
+    }
+
+    switchSettingsTab(tabName) {
+        // Hide all categories
+        document.querySelectorAll('.settings-category').forEach(cat => {
+            cat.classList.remove('active');
+        });
+
+        // Remove active class from all buttons
+        document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected category
+        document.getElementById(tabName)?.classList.add('active');
+
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+
+    loadSettings() {
+        // Load settings from localStorage or set defaults
+        const settings = {
+            theme: localStorage.getItem('gameTheme') || 'dark',
+            soundEnabled: localStorage.getItem('soundEnabled') !== 'false',
+            musicEnabled: localStorage.getItem('musicEnabled') !== 'false',
+            notifications: localStorage.getItem('notifications') !== 'false',
+            autoSave: localStorage.getItem('autoSave') !== 'false',
+            language: localStorage.getItem('language') || 'en',
+            displayMode: localStorage.getItem('displayMode') || 'windowed',
+            fontSize: localStorage.getItem('fontSize') || 'medium'
+        };
+
+        // Apply settings to UI
+        Object.keys(settings).forEach(key => {
+            const element = document.getElementById(key);
+            if (element) {
+                if (element.type === 'checkbox') {
+                    element.checked = settings[key];
+                } else {
+                    element.value = settings[key];
+                }
+            }
+        });
+    }
+
+    saveSettings() {
+        const settings = {};
+        const formElements = document.querySelectorAll('#preferences input, #preferences select, #notifications input, #display input, #display select');
+
+        formElements.forEach(element => {
+            if (element.type === 'checkbox') {
+                settings[element.id] = element.checked;
+                localStorage.setItem(element.id, element.checked);
+            } else {
+                settings[element.id] = element.value;
+                localStorage.setItem(element.id, element.value);
+            }
+        });
+
+        game.showNotification('Settings saved successfully!', 'success');
+    }
+
+    resetToDefaults() {
+        if (confirm('Are you sure you want to reset all settings to default?')) {
+            // Clear settings from localStorage
+            const settingsKeys = ['gameTheme', 'soundEnabled', 'musicEnabled', 'notifications', 'autoSave', 'language', 'displayMode', 'fontSize'];
+            settingsKeys.forEach(key => localStorage.removeItem(key));
+
+            // Reload settings
+            this.loadSettings();
+
+            game.showNotification('Settings reset to defaults!', 'info');
+        }
+    }
+
+    changePassword() {
+        const currentPassword = prompt('Enter your current password:');
+        if (!currentPassword) return;
+
+        const newPassword = prompt('Enter your new password:');
+        if (!newPassword) return;
+
+        const confirmPassword = prompt('Confirm your new password:');
+        if (newPassword !== confirmPassword) {
+            alert('Passwords do not match!');
+            return;
+        }
+
+        // Here you would typically send to server
+        game.showNotification('Password changed successfully!', 'success');
+    }
+
+    exportGameData() {
+        const gameData = {
+            player: game.player,
+            inventory: game.player.items,
+            stats: game.player.stats,
+            timestamp: new Date().toISOString()
+        };
+
+        const dataStr = JSON.stringify(gameData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+        const exportFileDefaultName = 'crimecity-save.json';
+
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+
+        game.showNotification('Game data exported!', 'success');
+    }
+
+    resetGameProgress() {
+        if (confirm('WARNING: This will reset ALL your progress! Are you absolutely sure?')) {
+            if (confirm('This action cannot be undone. Confirm reset?')) {
+                // Reset player data
+                game.resetPlayer();
+
+                // Clear localStorage
+                localStorage.clear();
+
+                // Reload the page
+                location.reload();
+            }
+        }
+    }
+
+    deleteAccount() {
+        if (confirm('WARNING: This will permanently delete your account! Are you sure?')) {
+            if (confirm('This action cannot be undone. All progress will be lost. Confirm deletion?')) {
+                // Here you would send delete request to server
+                game.showNotification('Account deletion request submitted. You will be logged out.', 'warning');
+
+                // Logout after delay
+                setTimeout(() => {
+                    window.gameAuthManager.logout();
+                }, 3000);
+            }
+        }
+    }
+
+    // Raceway System
+    initializeRacewaySystem() {
+        const racewayTabs = document.querySelectorAll('.raceway-tab-btn');
+        racewayTabs.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchRacewayTab(e.target.dataset.tab);
+            });
+        });
+
+        // Load initial data
+        this.loadRaces();
+        this.loadGarage();
+        this.loadLeaderboard();
+        this.loadRaceHistory();
+    }
+
+    switchRacewayTab(tabName) {
+        // Hide all categories
+        document.querySelectorAll('.raceway-category').forEach(cat => {
+            cat.classList.remove('active');
+        });
+
+        // Remove active class from all buttons
+        document.querySelectorAll('.raceway-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected category
+        document.getElementById(tabName)?.classList.add('active');
+
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+
+    loadRaces() {
+        const races = [
+            {
+                id: 1,
+                name: 'Downtown Sprint',
+                type: 'Street',
+                difficulty: 'beginner',
+                distance: '2.5 miles',
+                entryFee: 500,
+                reward: 2500,
+                requirements: 'Level 5+',
+                participants: 8
+            },
+            {
+                id: 2,
+                name: 'Highway Challenge',
+                type: 'Highway',
+                difficulty: 'intermediate',
+                distance: '5 miles',
+                entryFee: 1000,
+                reward: 5000,
+                requirements: 'Level 10+',
+                participants: 12
+            },
+            {
+                id: 3,
+                name: 'Mountain Pass',
+                type: 'Mountain',
+                difficulty: 'advanced',
+                distance: '8 miles',
+                entryFee: 2000,
+                reward: 10000,
+                requirements: 'Level 15+',
+                participants: 6
+            }
+        ];
+
+        this.displayRaces(races);
+    }
+
+    displayRaces(races) {
+        const container = document.getElementById('racesGrid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        races.forEach(race => {
+            const raceCard = document.createElement('div');
+            raceCard.className = 'race-card';
+            raceCard.innerHTML = `
+                <div class="race-header">
+                    <h4><i class="fas fa-flag-checkered"></i> ${race.name}</h4>
+                    <span class="race-difficulty ${race.difficulty}">${race.difficulty}</span>
+                </div>
+                <div class="race-details">
+                    <div class="race-stat">
+                        <div class="label">Type</div>
+                        <div class="value">${race.type}</div>
+                    </div>
+                    <div class="race-stat">
+                        <div class="label">Distance</div>
+                        <div class="value">${race.distance}</div>
+                    </div>
+                    <div class="race-stat">
+                        <div class="label">Entry Fee</div>
+                        <div class="value">$${race.entryFee}</div>
+                    </div>
+                    <div class="race-stat">
+                        <div class="label">Reward</div>
+                        <div class="value race-reward">$${race.reward}</div>
+                    </div>
+                </div>
+                <button class="race-btn" onclick="gameActions.enterRace(${race.id})">
+                    <i class="fas fa-play"></i> Enter Race
+                </button>
+            `;
+            container.appendChild(raceCard);
+        });
+    }
+
+    enterRace(raceId) {
+        const race = this.getRaceData(raceId);
+        if (!race) return;
+
+        if (game.player.cash < race.entryFee) {
+            game.showNotification('Not enough cash to enter this race!', 'error');
+            return;
+        }
+
+        // Deduct entry fee
+        game.player.cash -= race.entryFee;
+        game.updateDisplay();
+
+        // Start race
+        this.startRace(race);
+    }
+
+    startRace(race) {
+        game.showNotification(`Starting ${race.name}!`, 'info');
+
+        // Simple race simulation
+        setTimeout(() => {
+            const success = Math.random() > 0.5;
+            if (success) {
+                game.player.cash += race.reward;
+                game.showNotification(`You won ${race.name}! +$${race.reward}`, 'success');
+            } else {
+                game.showNotification(`You lost ${race.name}. Better luck next time!`, 'warning');
+            }
+            game.updateDisplay();
+        }, 3000);
+    }
+
+    loadGarage() {
+        const vehicles = [
+            {
+                id: 1,
+                name: 'Honda Civic',
+                type: 'sedan',
+                speed: 85,
+                handling: 75,
+                acceleration: 80,
+                price: 15000,
+                upgrades: []
+            },
+            {
+                id: 2,
+                name: 'Nissan GTR',
+                type: 'sports',
+                speed: 95,
+                handling: 90,
+                acceleration: 95,
+                price: 75000,
+                upgrades: []
+            }
+        ];
+
+        this.displayVehicles(vehicles);
+    }
+
+    displayVehicles(vehicles) {
+        const container = document.getElementById('vehiclesGrid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        vehicles.forEach(vehicle => {
+            const vehicleCard = document.createElement('div');
+            vehicleCard.className = 'vehicle-card';
+            vehicleCard.innerHTML = `
+                <div class="vehicle-header">
+                    <h4><i class="fas fa-car"></i> ${vehicle.name}</h4>
+                    <span class="vehicle-type">${vehicle.type}</span>
+                </div>
+                <div class="vehicle-details">
+                    <div class="vehicle-stat">
+                        <div class="label">Speed</div>
+                        <div class="value">${vehicle.speed}/100</div>
+                    </div>
+                    <div class="vehicle-stat">
+                        <div class="label">Handling</div>
+                        <div class="value">${vehicle.handling}/100</div>
+                    </div>
+                    <div class="vehicle-stat">
+                        <div class="label">Acceleration</div>
+                        <div class="value">${vehicle.acceleration}/100</div>
+                    </div>
+                    <div class="vehicle-stat">
+                        <div class="label">Value</div>
+                        <div class="value">$${vehicle.price}</div>
+                    </div>
+                </div>
+                <button class="vehicle-btn" onclick="gameActions.upgradeVehicle(${vehicle.id})">
+                    <i class="fas fa-tools"></i> Upgrade
+                </button>
+            `;
+            container.appendChild(vehicleCard);
+        });
+    }
+
+    upgradeVehicle(vehicleId) {
+        const upgradeCost = 5000;
+        if (game.player.cash < upgradeCost) {
+            game.showNotification('Not enough cash for upgrade!', 'error');
+            return;
+        }
+
+        game.player.cash -= upgradeCost;
+        game.updateDisplay();
+
+        game.showNotification('Vehicle upgraded! +5 to all stats', 'success');
+    }
+
+    loadLeaderboard() {
+        const leaderboard = [
+            { rank: 1, name: 'SpeedDemon99', wins: 45, totalRaces: 52 },
+            { rank: 2, name: 'StreetKing', wins: 38, totalRaces: 41 },
+            { rank: 3, name: 'NightRider', wins: 32, totalRaces: 38 },
+            { rank: 4, name: 'TurboCharge', wins: 28, totalRaces: 35 },
+            { rank: 5, name: 'RaceAce', wins: 25, totalRaces: 30 }
+        ];
+
+        this.displayLeaderboard(leaderboard);
+    }
+
+    displayLeaderboard(leaderboard) {
+        const container = document.getElementById('leaderboardList');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        leaderboard.forEach(player => {
+            const item = document.createElement('div');
+            item.className = 'leaderboard-item';
+            item.innerHTML = `
+                <div class="rank">#${player.rank}</div>
+                <div class="player-name">${player.name}</div>
+                <div class="stats">${player.wins}/${player.totalRaces} wins</div>
+                <div class="win-rate">${Math.round((player.wins/player.totalRaces)*100)}%</div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    loadRaceHistory() {
+        const history = [
+            { date: '2024-11-13', race: 'Downtown Sprint', position: 1, reward: 2500 },
+            { date: '2024-11-12', race: 'Highway Challenge', position: 3, reward: 1000 },
+            { date: '2024-11-11', race: 'Mountain Pass', position: 2, reward: 3000 }
+        ];
+
+        this.displayRaceHistory(history);
+    }
+
+    displayRaceHistory(history) {
+        const container = document.getElementById('historyList');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        history.forEach(race => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <div class="race-info">
+                    <div class="race-name">${race.race}</div>
+                    <div class="race-date">${race.date}</div>
+                </div>
+                <div class="race-result">
+                    <div class="position">${race.position}${this.getOrdinalSuffix(race.position)} place</div>
+                    <div class="reward">+$${race.reward}</div>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    getOrdinalSuffix(num) {
+        const j = num % 10, k = num % 100;
+        if (j == 1 && k != 11) return 'st';
+        if (j == 2 && k != 12) return 'nd';
+        if (j == 3 && k != 13) return 'rd';
+        return 'th';
+    }
+
+    getRaceData(id) {
+        const races = {
+            1: { id: 1, name: 'Downtown Sprint', entryFee: 500, reward: 2500 },
+            2: { id: 2, name: 'Highway Challenge', entryFee: 1000, reward: 5000 },
+            3: { id: 3, name: 'Mountain Pass', entryFee: 2000, reward: 10000 }
+        };
+        return races[id];
+    }
+
+    // Missions System
+    initializeMissionsSystem() {
+        const missionsTabs = document.querySelectorAll('.missions-tab-btn');
+        missionsTabs.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchMissionsTab(e.target.dataset.tab);
+            });
+        });
+
+        // Load initial data
+        this.loadAvailableMissions();
+        this.loadActiveMissions();
+        this.loadCompletedMissions();
+        this.loadAchievements();
+    }
+
+    switchMissionsTab(tabName) {
+        // Hide all categories
+        document.querySelectorAll('.missions-category').forEach(cat => {
+            cat.classList.remove('active');
+        });
+
+        // Remove active class from all buttons
+        document.querySelectorAll('.missions-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected category
+        document.getElementById(tabName)?.classList.add('active');
+
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+
+    loadAvailableMissions() {
+        const missions = [
+            {
+                id: 1,
+                title: 'First Steps',
+                type: 'crime',
+                difficulty: 'easy',
+                description: 'Commit your first crime',
+                reward: 1000,
+                timeLimit: '24h'
+            },
+            {
+                id: 2,
+                title: 'Money Maker',
+                type: 'business',
+                difficulty: 'medium',
+                description: 'Earn $10,000 from jobs',
+                reward: 2500,
+                timeLimit: '7d'
+            },
+            {
+                id: 3,
+                title: 'Street Fighter',
+                type: 'combat',
+                difficulty: 'hard',
+                description: 'Win 10 PvP battles',
+                reward: 5000,
+                timeLimit: '14d'
+            }
+        ];
+
+        this.displayMissions(missions);
+    }
+
+    displayMissions(missions) {
+        const container = document.getElementById('missionsGrid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        missions.forEach(mission => {
+            const missionCard = document.createElement('div');
+            missionCard.className = 'mission-card';
+            missionCard.innerHTML = `
+                <div class="mission-header">
+                    <h4><i class="fas fa-tasks"></i> ${mission.title}</h4>
+                    <span class="mission-type ${mission.type}">${mission.type}</span>
+                </div>
+                <div class="mission-details">
+                    <div class="mission-stat">
+                        <div class="label">Difficulty</div>
+                        <div class="value mission-difficulty ${mission.difficulty}">${mission.difficulty}</div>
+                    </div>
+                    <div class="mission-stat">
+                        <div class="label">Time Limit</div>
+                        <div class="value">${mission.timeLimit}</div>
+                    </div>
+                    <div class="mission-stat">
+                        <div class="label">Reward</div>
+                        <div class="value mission-rewards">$${mission.reward}</div>
+                    </div>
+                </div>
+                <div class="mission-description">${mission.description}</div>
+                <button class="mission-btn" onclick="gameActions.acceptMission(${mission.id})">
+                    <i class="fas fa-plus"></i> Accept Mission
+                </button>
+            `;
+            container.appendChild(missionCard);
+        });
+    }
+
+    acceptMission(missionId) {
+        const mission = this.getMissionData(missionId);
+        if (!mission) return;
+
+        game.showNotification(`Accepted mission: ${mission.title}!`, 'success');
+
+        // Add to active missions (would normally save to server)
+        // For demo, just show notification
+    }
+
+    loadActiveMissions() {
+        const activeMissions = [
+            {
+                id: 1,
+                title: 'First Steps',
+                progress: 0,
+                total: 1,
+                timeLeft: '23h 45m'
+            }
+        ];
+
+        this.displayActiveMissions(activeMissions);
+    }
+
+    displayActiveMissions(missions) {
+        const container = document.getElementById('activeMissionsList');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        missions.forEach(mission => {
+            const item = document.createElement('div');
+            item.className = 'active-mission-item';
+            item.innerHTML = `
+                <div class="mission-info">
+                    <div class="mission-title">${mission.title}</div>
+                    <div class="mission-progress">${mission.progress}/${mission.total}</div>
+                </div>
+                <div class="mission-time">Time: ${mission.timeLeft}</div>
+                <button class="mission-btn" onclick="gameActions.updateMissionProgress(${mission.id})">
+                    Update Progress
+                </button>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    updateMissionProgress(missionId) {
+        // Simulate progress update
+        game.showNotification('Mission progress updated!', 'info');
+    }
+
+    loadCompletedMissions() {
+        const completed = [
+            { title: 'Welcome to Crime City', reward: 500, completed: '2024-11-10' }
+        ];
+
+        this.displayCompletedMissions(completed);
+    }
+
+    displayCompletedMissions(missions) {
+        const container = document.getElementById('completedMissionsList');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        missions.forEach(mission => {
+            const item = document.createElement('div');
+            item.className = 'completed-mission-item';
+            item.innerHTML = `
+                <div class="mission-title">${mission.title}</div>
+                <div class="mission-reward">+$${mission.reward}</div>
+                <div class="mission-date">${mission.completed}</div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    loadAchievements() {
+        const achievements = [
+            {
+                id: 1,
+                title: 'First Blood',
+                description: 'Win your first battle',
+                rarity: 'common',
+                unlocked: true,
+                unlockedDate: '2024-11-12'
+            },
+            {
+                id: 2,
+                title: 'High Roller',
+                description: 'Win $10,000 at casino',
+                rarity: 'rare',
+                unlocked: false
+            }
+        ];
+
+        this.displayAchievements(achievements);
+    }
+
+    displayAchievements(achievements) {
+        const container = document.getElementById('achievementsGrid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        achievements.forEach(achievement => {
+            const achievementCard = document.createElement('div');
+            achievementCard.className = `achievement-card ${achievement.unlocked ? 'unlocked' : 'locked'}`;
+            achievementCard.innerHTML = `
+                <div class="achievement-header">
+                    <h4><i class="fas fa-trophy"></i> ${achievement.title}</h4>
+                    <span class="achievement-rarity ${achievement.rarity}">${achievement.rarity}</span>
+                </div>
+                <div class="achievement-description">${achievement.description}</div>
+                <div class="achievement-status">
+                    ${achievement.unlocked ? `<i class="fas fa-check"></i> Unlocked ${achievement.unlockedDate}` : '<i class="fas fa-lock"></i> Locked'}
+                </div>
+            `;
+            container.appendChild(achievementCard);
+        });
+    }
+
+    getMissionData(id) {
+        const missions = {
+            1: { id: 1, title: 'First Steps', reward: 1000 },
+            2: { id: 2, title: 'Money Maker', reward: 2500 },
+            3: { id: 3, title: 'Street Fighter', reward: 5000 }
+        };
+        return missions[id];
+    }
+
+    // Jail System
+    initializeJailSystem() {
+        const jailTabs = document.querySelectorAll('.jail-tab-btn');
+        jailTabs.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchJailTab(e.target.dataset.tab);
+            });
+        });
+
+        // Load initial data
+        this.updateJailStats();
+        this.loadCellInfo();
+    }
+
+    switchJailTab(tabName) {
+        // Hide all categories
+        document.querySelectorAll('.jail-category').forEach(cat => {
+            cat.classList.remove('active');
+        });
+
+        // Remove active class from all buttons
+        document.querySelectorAll('.jail-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected category
+        document.getElementById(tabName)?.classList.add('active');
+
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+
+    updateJailStats() {
+        // Update jail statistics display
+        const jailedTime = game.player.jailedTime || 0;
+        const sentence = game.player.jailSentence || 0;
+        const cellComfort = game.player.cellComfort || 50;
+
+        document.getElementById('jailedTime').textContent = this.formatTime(jailedTime);
+        document.getElementById('sentence').textContent = this.formatTime(sentence);
+        document.getElementById('cellComfort').textContent = `${cellComfort}%`;
+    }
+
+    loadCellInfo() {
+        const cellInfo = {
+            cellNumber: 'B-247',
+            block: 'Block B',
+            security: 'Medium',
+            comfort: game.player.cellComfort || 50,
+            conditions: ['Basic bed', 'Shared toilet', 'Small window']
+        };
+
+        const container = document.getElementById('cellInfo');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="cell-details">
+                <div class="cell-stat">
+                    <div class="label">Cell Number</div>
+                    <div class="value">${cellInfo.cellNumber}</div>
+                </div>
+                <div class="cell-stat">
+                    <div class="label">Block</div>
+                    <div class="value">${cellInfo.block}</div>
+                </div>
+                <div class="cell-stat">
+                    <div class="label">Security Level</div>
+                    <div class="value">${cellInfo.security}</div>
+                </div>
+            </div>
+            <div class="cell-conditions">
+                <h4><i class="fas fa-home"></i> Cell Conditions</h4>
+                <div class="condition-bars">
+                    <div class="condition-bar">
+                        <div class="label">Comfort</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${cellInfo.comfort}%"></div>
+                        </div>
+                        <div class="value">${cellInfo.comfort}%</div>
+                    </div>
+                </div>
+                <div class="cell-actions">
+                    <button class="jail-btn" onclick="gameActions.cleanCell()">
+                        <i class="fas fa-broom"></i> Clean Cell (+5 comfort)
+                    </button>
+                    <button class="jail-btn" onclick="gameActions.improveComfort()">
+                        <i class="fas fa-bed"></i> Improve Comfort (+10 comfort)
+                    </button>
+                    <button class="jail-btn" onclick="gameActions.requestTransfer()">
+                        <i class="fas fa-exchange-alt"></i> Request Transfer
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    cleanCell() {
+        const cost = 100;
+        if (game.player.cash < cost) {
+            game.showNotification('Not enough cash!', 'error');
+            return;
+        }
+
+        game.player.cash -= cost;
+        game.player.cellComfort = Math.min(100, (game.player.cellComfort || 50) + 5);
+        game.updateDisplay();
+        this.loadCellInfo();
+        game.showNotification('Cell cleaned! +5 comfort', 'success');
+    }
+
+    improveComfort() {
+        const cost = 500;
+        if (game.player.cash < cost) {
+            game.showNotification('Not enough cash!', 'error');
+            return;
+        }
+
+        game.player.cash -= cost;
+        game.player.cellComfort = Math.min(100, (game.player.cellComfort || 50) + 10);
+        game.updateDisplay();
+        this.loadCellInfo();
+        game.showNotification('Comfort improved! +10 comfort', 'success');
+    }
+
+    requestTransfer() {
+        const cost = 1000;
+        if (game.player.cash < cost) {
+            game.showNotification('Not enough cash!', 'error');
+            return;
+        }
+
+        game.player.cash -= cost;
+        game.updateDisplay();
+        game.showNotification('Transfer request submitted! Processing...', 'info');
+    }
+
+    loadActivities() {
+        const activities = [
+            {
+                id: 1,
+                name: 'Library Time',
+                type: 'education',
+                duration: '2 hours',
+                benefits: '+5 intelligence, +2 education',
+                cost: 0
+            },
+            {
+                id: 2,
+                name: 'Weight Room',
+                type: 'training',
+                duration: '1 hour',
+                benefits: '+3 strength, +2 stamina',
+                cost: 50
+            },
+            {
+                id: 3,
+                name: 'Kitchen Duty',
+                type: 'work',
+                duration: '4 hours',
+                benefits: '+100 cash, +1 cooking skill',
+                cost: 0
+            }
+        ];
+
+        this.displayActivities(activities);
+    }
+
+    displayActivities(activities) {
+        const container = document.getElementById('activitiesGrid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        activities.forEach(activity => {
+            const activityCard = document.createElement('div');
+            activityCard.className = 'activity-card';
+            activityCard.innerHTML = `
+                <div class="activity-header">
+                    <h4><i class="fas fa-running"></i> ${activity.name}</h4>
+                    <span class="activity-type">${activity.type}</span>
+                </div>
+                <div class="activity-details">
+                    <div class="activity-stat">
+                        <div class="label">Duration</div>
+                        <div class="value">${activity.duration}</div>
+                    </div>
+                    <div class="activity-stat">
+                        <div class="label">Cost</div>
+                        <div class="value">${activity.cost === 0 ? 'Free' : '$' + activity.cost}</div>
+                    </div>
+                </div>
+                <div class="activity-description">${activity.benefits}</div>
+                <button class="activity-btn" onclick="gameActions.performActivity(${activity.id})">
+                    <i class="fas fa-play"></i> Perform Activity
+                </button>
+            `;
+            container.appendChild(activityCard);
+        });
+    }
+
+    performActivity(activityId) {
+        const activity = this.getActivityData(activityId);
+        if (!activity) return;
+
+        if (activity.cost > 0 && game.player.cash < activity.cost) {
+            game.showNotification('Not enough cash!', 'error');
+            return;
+        }
+
+        if (activity.cost > 0) {
+            game.player.cash -= activity.cost;
+        }
+
+        game.updateDisplay();
+        game.showNotification(`Performing ${activity.name}...`, 'info');
+
+        // Simulate activity completion
+        setTimeout(() => {
+            game.showNotification(`${activity.name} completed! ${activity.benefits}`, 'success');
+        }, 2000);
+    }
+
+    loadVisitors() {
+        const visitors = [
+            { name: 'Lawyer Johnson', type: 'lawyer', available: true },
+            { name: 'Family Member', type: 'family', available: false },
+            { name: 'Gang Contact', type: 'contact', available: true }
+        ];
+
+        this.displayVisitors(visitors);
+    }
+
+    displayVisitors(visitors) {
+        const container = document.getElementById('visitorsList');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        visitors.forEach(visitor => {
+            const visitorCard = document.createElement('div');
+            visitorCard.className = 'visitor-card';
+            visitorCard.innerHTML = `
+                <div class="visitor-header">
+                    <h4><i class="fas fa-user"></i> ${visitor.name}</h4>
+                    <span class="visitor-type">${visitor.type}</span>
+                </div>
+                <div class="visitor-details">
+                    <div class="visitor-stat">
+                        <div class="label">Status</div>
+                        <div class="value">${visitor.available ? 'Available' : 'Unavailable'}</div>
+                    </div>
+                </div>
+                <div class="visitor-info">Click to interact with this visitor</div>
+                <div class="comm-actions">
+                    <button class="jail-btn" onclick="gameActions.sendLetter('${visitor.name}')">
+                        <i class="fas fa-envelope"></i> Send Letter
+                    </button>
+                    <button class="jail-btn" onclick="gameActions.makePhoneCall('${visitor.name}')" ${!visitor.available ? 'disabled' : ''}>
+                        <i class="fas fa-phone"></i> Phone Call
+                    </button>
+                    <button class="jail-btn" onclick="gameActions.requestLawyer()" ${visitor.type !== 'lawyer' ? 'disabled' : ''}>
+                        <i class="fas fa-gavel"></i> Legal Help
+                    </button>
+                </div>
+            `;
+            container.appendChild(visitorCard);
+        });
+    }
+
+    sendLetter(visitorName) {
+        game.showNotification(`Letter sent to ${visitorName}!`, 'success');
+    }
+
+    makePhoneCall(visitorName) {
+        const cost = 200;
+        if (game.player.cash < cost) {
+            game.showNotification('Not enough cash for phone call!', 'error');
+            return;
+        }
+
+        game.player.cash -= cost;
+        game.updateDisplay();
+        game.showNotification(`Phone call to ${visitorName} completed!`, 'success');
+    }
+
+    requestLawyer() {
+        const cost = 1000;
+        if (game.player.cash < cost) {
+            game.showNotification('Not enough cash for lawyer!', 'error');
+            return;
+        }
+
+        game.player.cash -= cost;
+        game.updateDisplay();
+        game.showNotification('Lawyer requested! Legal assistance incoming...', 'info');
+    }
+
+    loadBailOptions() {
+        const bailOptions = [
+            {
+                id: 1,
+                type: 'cash',
+                amount: 5000,
+                description: 'Pay cash bail',
+                successRate: '100%'
+            },
+            {
+                id: 2,
+                type: 'property',
+                amount: 25000,
+                description: 'Post property as collateral',
+                successRate: '95%'
+            },
+            {
+                id: 3,
+                type: 'lawyer',
+                amount: 10000,
+                description: 'Hire expensive lawyer',
+                successRate: '85%'
+            }
+        ];
+
+        this.displayBailOptions(bailOptions);
+    }
+
+    displayBailOptions(options) {
+        const container = document.getElementById('bailOptions');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        options.forEach(option => {
+            const bailCard = document.createElement('div');
+            bailCard.className = 'bail-card';
+            bailCard.innerHTML = `
+                <div class="bail-header">
+                    <h4><i class="fas fa-money-bill"></i> ${option.description}</h4>
+                    <span class="bail-type">${option.type}</span>
+                </div>
+                <div class="bail-details">
+                    <div class="bail-stat">
+                        <div class="label">Cost</div>
+                        <div class="value bail-cost">$${option.amount}</div>
+                    </div>
+                    <div class="bail-stat">
+                        <div class="label">Success Rate</div>
+                        <div class="value">${option.successRate}</div>
+                    </div>
+                </div>
+                <div class="bail-description">Attempt to get released from jail using this method</div>
+                <button class="bail-btn" onclick="gameActions.attemptBail(${option.id})">
+                    <i class="fas fa-sign-out-alt"></i> Attempt Bail
+                </button>
+            `;
+            container.appendChild(bailCard);
+        });
+    }
+
+    attemptBail(optionId) {
+        const option = this.getBailOptionData(optionId);
+        if (!option) return;
+
+        if (game.player.cash < option.amount) {
+            game.showNotification('Not enough cash for this bail option!', 'error');
+            return;
+        }
+
+        game.player.cash -= option.amount;
+        game.updateDisplay();
+
+        const success = Math.random() * 100 < parseInt(option.successRate);
+        if (success) {
+            game.player.jailedTime = 0;
+            game.player.jailSentence = 0;
+            game.showNotification('Bail successful! You are free!', 'success');
+            // Would normally redirect to city
+        } else {
+            game.showNotification('Bail attempt failed!', 'error');
+        }
+    }
+
+    attemptJailbreak() {
+        const risk = 30; // 30% success rate
+        const success = Math.random() * 100 < risk;
+
+        if (success) {
+            game.player.jailedTime = 0;
+            game.player.jailSentence = 0;
+            game.showNotification('Jailbreak successful! You escaped!', 'success');
+            // Would normally redirect to city
+        } else {
+            // Failed jailbreak - extend sentence
+            game.player.jailSentence += 24 * 60 * 60 * 1000; // +1 day
+            game.showNotification('Jailbreak failed! Sentence extended!', 'error');
+        }
+    }
+
+    bribeGuard() {
+        const cost = 2000;
+        if (game.player.cash < cost) {
+            game.showNotification('Not enough cash for bribe!', 'error');
+            return;
+        }
+
+        game.player.cash -= cost;
+        game.updateDisplay();
+
+        game.showNotification('Guard bribed! Information obtained...', 'info');
+    }
+
+    getActivityData(id) {
+        const activities = {
+            1: { id: 1, name: 'Library Time', cost: 0, benefits: '+5 intelligence, +2 education' },
+            2: { id: 2, name: 'Weight Room', cost: 50, benefits: '+3 strength, +2 stamina' },
+            3: { id: 3, name: 'Kitchen Duty', cost: 0, benefits: '+100 cash, +1 cooking skill' }
+        };
+        return activities[id];
+    }
+
+    getBailOptionData(id) {
+        const options = {
+            1: { id: 1, amount: 5000, successRate: '100' },
+            2: { id: 2, amount: 25000, successRate: '95' },
+            3: { id: 3, amount: 10000, successRate: '85' }
+        };
+        return options[id];
+    }
+
+    // Newspaper System
+    initializeNewspaperSystem() {
+        // Load initial news
+        this.loadNews();
+    }
+
+    loadNews() {
+        const news = {
+            featured: {
+                title: 'Mayor Announces New Crime Prevention Initiative',
+                date: 'November 13, 2024',
+                summary: 'City officials unveil comprehensive plan to combat rising crime rates...'
+            },
+            articles: [
+                {
+                    title: 'Local Gang Activity on the Rise',
+                    category: 'crime',
+                    date: 'November 13, 2024',
+                    summary: 'Police report increased gang-related incidents in downtown area.'
+                },
+                {
+                    title: 'Tech Company Opens New Headquarters',
+                    category: 'business',
+                    date: 'November 12, 2024',
+                    summary: 'Major tech firm brings 500 new jobs to the city.'
+                },
+                {
+                    title: 'Championship Basketball Game This Weekend',
+                    category: 'sports',
+                    date: 'November 11, 2024',
+                    summary: 'Local team prepares for playoff showdown.'
+                }
+            ]
+        };
+
+        this.displayFeaturedArticle(news.featured);
+        this.displayArticles(news.articles);
+        this.displayWeather();
+        this.displayWantedPlayers();
+        this.displayFactionNews();
+        this.displayClassifieds();
+    }
+
+    displayFeaturedArticle(article) {
+        const container = document.getElementById('featuredArticle');
+        if (!container) return;
+
+        container.innerHTML = `
+            <h2>${article.title}</h2>
+            <div class="article-meta">${article.date}</div>
+            <p>${article.summary}</p>
+            <button class="newspaper-btn" onclick="gameActions.readFullArticle('${article.title}')">
+                <i class="fas fa-newspaper"></i> Read Full Article
+            </button>
+        `;
+    }
+
+    displayArticles(articles) {
+        const container = document.getElementById('articlesGrid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        articles.forEach(article => {
+            const articleCard = document.createElement('div');
+            articleCard.className = 'article-card';
+            articleCard.innerHTML = `
+                <h3>${article.title}</h3>
+                <div class="article-meta">${article.date}</div>
+                <span class="article-category ${article.category}">${article.category}</span>
+                <p>${article.summary}</p>
+            `;
+            container.appendChild(articleCard);
+        });
+    }
+
+    displayWeather() {
+        const weather = {
+            temperature: '72°F',
+            condition: 'Sunny',
+            forecast: 'Clear skies expected for the next few days.'
+        };
+
+        const container = document.getElementById('weatherWidget');
+        if (!container) return;
+
+        container.innerHTML = `
+            <h4><i class="fas fa-sun"></i> Weather</h4>
+            <div class="weather-info">
+                <div><strong>${weather.temperature}</strong> - ${weather.condition}</div>
+                <div>${weather.forecast}</div>
+            </div>
+        `;
+    }
+
+    displayWantedPlayers() {
+        const wanted = [
+            { name: 'John "Quick" Smith', bounty: 5000, crime: 'Armed Robbery' },
+            { name: 'Maria Gonzalez', bounty: 7500, crime: 'Drug Trafficking' },
+            { name: 'Tommy "The Hammer" Johnson', bounty: 10000, crime: 'Murder' }
+        ];
+
+        const container = document.getElementById('wantedList');
+        if (!container) return;
+
+        container.innerHTML = '<h4><i class="fas fa-user-secret"></i> Most Wanted</h4>';
+
+        wanted.forEach(player => {
+            const item = document.createElement('div');
+            item.className = 'wanted-player';
+            item.innerHTML = `
+                <h5>${player.name}</h5>
+                <p>Bounty: $${player.bounty}<br>Crime: ${player.crime}</p>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    displayFactionNews() {
+        const factionNews = [
+            'Blood Kings expand territory downtown',
+            'Shadow Syndicate offers peace treaty',
+            'Rebel Alliance declares war on all rivals'
+        ];
+
+        const container = document.getElementById('factionNews');
+        if (!container) return;
+
+        container.innerHTML = '<h4><i class="fas fa-users"></i> Faction News</h4>';
+
+        factionNews.forEach(news => {
+            const item = document.createElement('div');
+            item.className = 'faction-update';
+            item.innerHTML = `<h5>Faction Alert</h5><p>${news}</p>`;
+            container.appendChild(item);
+        });
+    }
+
+    displayClassifieds() {
+        const ads = [
+            'Luxury apartment for rent - $2000/month',
+            'Rare sports car for sale - $50,000',
+            'Bodyguard services available'
+        ];
+
+        const container = document.getElementById('classifieds');
+        if (!container) return;
+
+        container.innerHTML = '<h4><i class="fas fa-ad"></i> Classifieds</h4>';
+
+        ads.forEach(ad => {
+            const item = document.createElement('div');
+            item.className = 'ad-item';
+            item.innerHTML = `<h5>For Sale/Trade</h5><p>${ad}</p>`;
+            container.appendChild(item);
+        });
+    }
+
+    refreshNews() {
+        this.loadNews();
+        game.showNotification('News refreshed!', 'info');
+    }
+
+    subscribeNewspaper() {
+        const cost = 500;
+        if (game.player.cash < cost) {
+            game.showNotification('Not enough cash for newspaper subscription!', 'error');
+            return;
+        }
+
+        game.player.cash -= cost;
+        game.updateDisplay();
+        game.showNotification('Newspaper subscription activated!', 'success');
+    }
+
+    writeArticle() {
+        game.showNotification('Article submission feature coming soon!', 'info');
+    }
+
+    readFullArticle(title) {
+        game.showNotification(`Reading: ${title}`, 'info');
+        // Would open full article modal
+    }
+
+    // Character Customization System
+    initializeCharacterCustomizationSystem() {
+        const characterTabs = document.querySelectorAll('.character-tab-btn');
+        characterTabs.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchCharacterTab(e.target.dataset.tab);
+            });
+        });
+
+        // Load initial character data
+        this.loadCharacter();
+    }
+
+    switchCharacterTab(tabName) {
+        // Hide all categories
+        document.querySelectorAll('.character-category').forEach(cat => {
+            cat.classList.remove('active');
+        });
+
+        // Remove active class from all buttons
+        document.querySelectorAll('.character-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected category
+        document.getElementById(tabName)?.classList.add('active');
+
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+
+    loadCharacter() {
+        const character = {
+            name: game.player.name || 'Player',
+            level: game.player.level || 1,
+            appearance: {
+                hair: 'black',
+                eyes: 'brown',
+                skin: 'medium'
+            },
+            clothing: {
+                shirt: 't-shirt',
+                pants: 'jeans',
+                shoes: 'sneakers'
+            }
+        };
+
+        this.updateCharacterPreview(character);
+        this.updateAppearanceControls(character.appearance);
+        this.updateClothingDisplay(character.clothing);
+    }
+
+    updateCharacterPreview(character) {
+        const container = document.getElementById('characterPreview');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="character-avatar">
+                <i class="fas fa-user-circle fa-4x"></i>
+            </div>
+            <div class="character-info">
+                <div class="character-name-display">${character.name}</div>
+                <div class="character-stats">
+                    <span class="stat">Level: <span>${character.level}</span></span>
+                </div>
+            </div>
+        `;
+    }
+
+    updateAppearanceControls(appearance) {
+        // Update form controls with current appearance values
+        Object.keys(appearance).forEach(key => {
+            const element = document.getElementById(key);
+            if (element) {
+                element.value = appearance[key];
+            }
+        });
+    }
+
+    updateClothingDisplay(clothing) {
+        const container = document.getElementById('clothingGrid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        Object.entries(clothing).forEach(([type, item]) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'clothing-item';
+            itemDiv.innerHTML = `
+                <i class="fas fa-tshirt"></i>
+                <span>${type}: ${item}</span>
+            `;
+            itemDiv.onclick = () => this.selectClothing(type, item);
+            container.appendChild(itemDiv);
+        });
+    }
+
+    selectClothing(type, item) {
+        game.showNotification(`Selected ${type}: ${item}`, 'info');
+    }
+
+    saveCharacter() {
+        // Collect form data
+        const formData = new FormData(document.getElementById('characterForm'));
+        const characterData = Object.fromEntries(formData);
+
+        // Save to player data
+        game.player.name = characterData.name;
+        game.player.appearance = {
+            hair: characterData.hair,
+            eyes: characterData.eyes,
+            skin: characterData.skin
+        };
+
+        game.updateDisplay();
+        game.showNotification('Character saved successfully!', 'success');
+    }
+
+    resetCharacter() {
+        if (confirm('Reset character to defaults?')) {
+            this.loadCharacter();
+            game.showNotification('Character reset!', 'info');
+        }
+    }
+
+    randomizeCharacter() {
+        const hairOptions = ['black', 'brown', 'blonde', 'red', 'gray'];
+        const eyeOptions = ['brown', 'blue', 'green', 'hazel'];
+        const skinOptions = ['light', 'medium', 'dark'];
+
+        const randomAppearance = {
+            hair: hairOptions[Math.floor(Math.random() * hairOptions.length)],
+            eyes: eyeOptions[Math.floor(Math.random() * eyeOptions.length)],
+            skin: skinOptions[Math.floor(Math.random() * skinOptions.length)]
+        };
+
+        this.updateAppearanceControls(randomAppearance);
+        game.showNotification('Character randomized!', 'info');
+    }
+
+    // Gym System
+    initializeGymSystem() {
+        const gymTabs = document.querySelectorAll('.gym-tab-btn');
+        gymTabs.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchGymTab(e.target.dataset.tab);
+            });
+        });
+
+        // Load initial data
+        this.loadWorkouts();
+        this.loadTrainingPrograms();
+        this.loadEquipment();
+    }
+
+    switchGymTab(tabName) {
+        // Hide all categories
+        document.querySelectorAll('.gym-category').forEach(cat => {
+            cat.classList.remove('active');
+        });
+
+        // Remove active class from all buttons
+        document.querySelectorAll('.gym-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected category
+        document.getElementById(tabName)?.classList.add('active');
+
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+
+    loadWorkouts() {
+        const workouts = [
+            {
+                id: 1,
+                name: 'Upper Body Blast',
+                type: 'strength',
+                difficulty: 'intermediate',
+                duration: '45 min',
+                benefits: '+5 strength, +3 stamina',
+                energyCost: 20
+            },
+            {
+                id: 2,
+                name: 'Cardio Endurance',
+                type: 'cardio',
+                difficulty: 'beginner',
+                duration: '30 min',
+                benefits: '+4 stamina, +2 speed',
+                energyCost: 15
+            },
+            {
+                id: 3,
+                name: 'Combat Training',
+                type: 'combat',
+                difficulty: 'advanced',
+                duration: '60 min',
+                benefits: '+6 combat skill, +4 strength',
+                energyCost: 30
+            }
+        ];
+
+        this.displayWorkouts(workouts);
+        this.updateGymStats();
+    }
+
+    displayWorkouts(workouts) {
+        const container = document.getElementById('workoutsGrid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        workouts.forEach(workout => {
+            const workoutCard = document.createElement('div');
+            workoutCard.className = 'workout-card';
+            workoutCard.innerHTML = `
+                <div class="workout-header">
+                    <h4><i class="fas fa-dumbbell"></i> ${workout.name}</h4>
+                    <span class="workout-type ${workout.type}">${workout.type}</span>
+                </div>
+                <div class="workout-details">
+                    <div class="workout-stat">
+                        <div class="label">Difficulty</div>
+                        <div class="value workout-difficulty ${workout.difficulty}">${workout.difficulty}</div>
+                    </div>
+                    <div class="workout-stat">
+                        <div class="label">Duration</div>
+                        <div class="value">${workout.duration}</div>
+                    </div>
+                    <div class="workout-stat">
+                        <div class="label">Energy Cost</div>
+                        <div class="value">${workout.energyCost}</div>
+                    </div>
+                </div>
+                <div class="workout-description">${workout.benefits}</div>
+                <button class="workout-btn" onclick="gameActions.startWorkout(${workout.id})">
+                    <i class="fas fa-play"></i> Start Workout
+                </button>
+            `;
+            container.appendChild(workoutCard);
+        });
+    }
+
+    startWorkout(workoutId) {
+        const workout = this.getWorkoutData(workoutId);
+        if (!workout) return;
+
+        if (game.player.energy < workout.energyCost) {
+            game.showNotification('Not enough energy!', 'error');
+            return;
+        }
+
+        game.player.energy -= workout.energyCost;
+        game.updateDisplay();
+
+        game.showNotification(`Starting ${workout.name}...`, 'info');
+
+        // Simulate workout completion
+        setTimeout(() => {
+            game.showNotification(`${workout.name} completed! ${workout.benefits}`, 'success');
+            // Apply stat bonuses
+            this.applyWorkoutBenefits(workout);
+        }, 3000);
+    }
+
+    applyWorkoutBenefits(workout) {
+        // Parse benefits and apply to player stats
+        // This would be more sophisticated in a real implementation
+        game.player.stats.strength = (game.player.stats.strength || 0) + 2;
+        game.player.stats.stamina = (game.player.stats.stamina || 0) + 1;
+    }
+
+    loadTrainingPrograms() {
+        const programs = [
+            {
+                id: 1,
+                name: 'Beginner Bodybuilding',
+                type: 'strength',
+                duration: '8 weeks',
+                sessionsPerWeek: 3,
+                cost: 500,
+                benefits: 'Build foundational strength'
+            },
+            {
+                id: 2,
+                name: 'Marathon Training',
+                type: 'cardio',
+                duration: '12 weeks',
+                sessionsPerWeek: 4,
+                cost: 800,
+                benefits: 'Improve endurance and speed'
+            }
+        ];
+
+        this.displayPrograms(programs);
+    }
+
+    displayPrograms(programs) {
+        const container = document.getElementById('programsGrid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        programs.forEach(program => {
+            const programCard = document.createElement('div');
+            programCard.className = 'program-card';
+            programCard.innerHTML = `
+                <div class="program-header">
+                    <h4><i class="fas fa-calendar-alt"></i> ${program.name}</h4>
+                    <span class="program-type">${program.type}</span>
+                </div>
+                <div class="program-details">
+                    <div class="program-stat">
+                        <div class="label">Duration</div>
+                        <div class="value">${program.duration}</div>
+                    </div>
+                    <div class="program-stat">
+                        <div class="label">Sessions/Week</div>
+                        <div class="value">${program.sessionsPerWeek}</div>
+                    </div>
+                    <div class="program-stat">
+                        <div class="label">Cost</div>
+                        <div class="value">$${program.cost}</div>
+                    </div>
+                </div>
+                <div class="program-description">${program.benefits}</div>
+                <button class="program-btn" onclick="gameActions.enrollInProgram(${program.id})">
+                    <i class="fas fa-user-plus"></i> Enroll
+                </button>
+            `;
+            container.appendChild(programCard);
+        });
+    }
+
+    enrollInProgram(programId) {
+        const program = this.getProgramData(programId);
+        if (!program) return;
+
+        if (game.player.cash < program.cost) {
+            game.showNotification('Not enough cash!', 'error');
+            return;
+        }
+
+        game.player.cash -= program.cost;
+        game.updateDisplay();
+        game.showNotification(`Enrolled in ${program.name}!`, 'success');
+    }
+
+    doDailyWorkout() {
+        const energyCost = 10;
+        if (game.player.energy < energyCost) {
+            game.showNotification('Not enough energy!', 'error');
+            return;
+        }
+
+        game.player.energy -= energyCost;
+        game.player.stats.strength = (game.player.stats.strength || 0) + 1;
+        game.updateDisplay();
+        game.showNotification('Daily workout completed! +1 strength', 'success');
+    }
+
+    loadEquipment() {
+        const equipment = [
+            {
+                id: 1,
+                name: 'Weight Bench',
+                type: 'strength',
+                cost: 2000,
+                benefits: 'Enables advanced strength training'
+            },
+            {
+                id: 2,
+                name: 'Treadmill',
+                type: 'cardio',
+                cost: 3000,
+                benefits: 'Improves cardio endurance'
+            }
+        ];
+
+        this.displayEquipment(equipment);
+    }
+
+    displayEquipment(equipment) {
+        const container = document.getElementById('equipmentGrid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        equipment.forEach(item => {
+            const equipmentCard = document.createElement('div');
+            equipmentCard.className = 'equipment-card';
+            equipmentCard.innerHTML = `
+                <div class="equipment-header">
+                    <h4><i class="fas fa-cogs"></i> ${item.name}</h4>
+                    <span class="equipment-type">${item.type}</span>
+                </div>
+                <div class="equipment-details">
+                    <div class="equipment-stat">
+                        <div class="label">Cost</div>
+                        <div class="value">$${item.cost}</div>
+                    </div>
+                </div>
+                <div class="equipment-description">${item.benefits}</div>
+                <button class="equipment-btn" onclick="gameActions.purchaseEquipment(${item.id})">
+                    <i class="fas fa-shopping-cart"></i> Purchase
+                </button>
+            `;
+            container.appendChild(equipmentCard);
+        });
+    }
+
+    purchaseEquipment(equipmentId) {
+        const equipment = this.getEquipmentData(equipmentId);
+        if (!equipment) return;
+
+        if (game.player.cash < equipment.cost) {
+            game.showNotification('Not enough cash!', 'error');
+            return;
+        }
+
+        game.player.cash -= equipment.cost;
+        game.updateDisplay();
+        game.showNotification(`Purchased ${equipment.name}!`, 'success');
+    }
+
+    updateGymStats() {
+        const stats = {
+            strength: game.player.stats.strength || 0,
+            stamina: game.player.stats.stamina || 0,
+            speed: game.player.stats.speed || 0,
+            combat: game.player.stats.combat || 0
+        };
+
+        // Update stats display
+        Object.keys(stats).forEach(stat => {
+            const element = document.getElementById(`gym${stat.charAt(0).toUpperCase() + stat.slice(1)}`);
+            if (element) {
+                element.textContent = stats[stat];
+            }
+        });
+    }
+
+    getWorkoutData(id) {
+        const workouts = {
+            1: { id: 1, name: 'Upper Body Blast', energyCost: 20, benefits: '+5 strength, +3 stamina' },
+            2: { id: 2, name: 'Cardio Endurance', energyCost: 15, benefits: '+4 stamina, +2 speed' },
+            3: { id: 3, name: 'Combat Training', energyCost: 30, benefits: '+6 combat skill, +4 strength' }
+        };
+        return workouts[id];
+    }
+
+    getProgramData(id) {
+        const programs = {
+            1: { id: 1, name: 'Beginner Bodybuilding', cost: 500 },
+            2: { id: 2, name: 'Marathon Training', cost: 800 }
+        };
+        return programs[id];
+    }
+
+    getEquipmentData(id) {
+        const equipment = {
+            1: { id: 1, name: 'Weight Bench', cost: 2000 },
+            2: { id: 2, name: 'Treadmill', cost: 3000 }
+        };
+        return equipment[id];
+    }
+
+    formatTime(milliseconds) {
+        const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+        const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+        return `${hours}h ${minutes}m`;
     }
 }
 
@@ -8780,6 +12761,505 @@ class HospitalSystem {
         }
         return 0.5; // 50% discount
     }
+
+    // New hospital system methods for tabs and modals
+    initializeHospitalSystem() {
+        this.currentHospitalTab = 'treatment';
+        this.setupHospitalEventListeners();
+        this.updateMedicalStats();
+        this.loadHospitalData();
+    }
+
+    setupHospitalEventListeners() {
+        // Hospital tab buttons
+        document.querySelectorAll('.hospital-tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchHospitalTab(e.target.dataset.tab);
+            });
+        });
+
+        // Treatment buttons
+        document.querySelectorAll('.treatment-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const treatmentId = e.target.closest('.treatment-card').dataset.treatment;
+                this.openTreatmentModal(treatmentId);
+            });
+        });
+
+        // Surgery buttons
+        document.querySelectorAll('.surgery-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const surgeryId = e.target.closest('.surgery-card').dataset.surgery;
+                this.openTreatmentModal(surgeryId);
+            });
+        });
+
+        // Pharmacy buttons
+        document.querySelectorAll('.pharmacy-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const medicationId = e.target.closest('.pharmacy-card').dataset.medication;
+                this.purchaseMedication(medicationId);
+            });
+        });
+
+        // Treatment modal buttons
+        document.getElementById('confirm-treatment-btn')?.addEventListener('click', () => {
+            this.confirmTreatment();
+        });
+
+        document.getElementById('cancel-treatment-btn')?.addEventListener('click', () => {
+            this.closeTreatmentModal();
+        });
+    }
+
+    switchHospitalTab(tabName) {
+        // Remove active class from all tabs
+        document.querySelectorAll('.hospital-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelectorAll('.hospital-category').forEach(category => {
+            category.classList.remove('active');
+        });
+
+        // Add active class to selected tab
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+
+        this.currentHospitalTab = tabName;
+        this.loadHospitalData();
+    }
+
+    updateMedicalStats() {
+        const health = game.player.health || 100;
+        const injuries = game.player.injuries || 0;
+        const medicalBills = game.player.medicalBills || 0;
+
+        // Update dashboard stats
+        const statCards = document.querySelectorAll('.medical-stat-card');
+        statCards.forEach(card => {
+            const icon = card.querySelector('i');
+            const value = card.querySelector('span');
+
+            if (card.querySelector('h4:contains("Health")')) {
+                if (icon) icon.className = 'fas fa-heart';
+                if (value) value.textContent = `${health}%`;
+            } else if (card.querySelector('h4:contains("Injuries")')) {
+                if (icon) icon.className = 'fas fa-band-aid';
+                if (value) value.textContent = `${injuries}%`;
+            } else if (card.querySelector('h4:contains("Medical Bills")')) {
+                if (icon) icon.className = 'fas fa-dollar-sign';
+                if (value) value.textContent = `$${medicalBills.toLocaleString()}`;
+            } else if (card.querySelector('h4:contains("Insurance")')) {
+                if (icon) icon.className = 'fas fa-shield-alt';
+                if (value) value.textContent = this.healthInsurance ? 'Active' : 'None';
+            }
+        });
+    }
+
+    loadHospitalData() {
+        if (this.currentHospitalTab === 'treatment') {
+            this.loadTreatmentOptions();
+        } else if (this.currentHospitalTab === 'surgery') {
+            this.loadSurgeryOptions();
+        } else if (this.currentHospitalTab === 'pharmacy') {
+            this.loadPharmacyOptions();
+        } else if (this.currentHospitalTab === 'records') {
+            this.loadMedicalRecords();
+        }
+    }
+
+    loadTreatmentOptions() {
+        const treatmentData = this.getTreatmentData();
+        const container = document.querySelector('#treatment .treatment-options');
+
+        if (!container) return;
+
+        container.innerHTML = treatmentData.map(treatment => `
+            <div class="treatment-card" data-treatment="${treatment.id}">
+                <div class="treatment-header">
+                    <h4><i class="${treatment.icon}"></i> ${treatment.name}</h4>
+                    <span class="treatment-urgency ${treatment.urgency}">${treatment.urgency}</span>
+                </div>
+                <div class="treatment-details">
+                    <div class="treatment-stat">
+                        <div class="label">Cost</div>
+                        <div class="value">$${treatment.cost.toLocaleString()}</div>
+                    </div>
+                    <div class="treatment-stat">
+                        <div class="label">Life Restore</div>
+                        <div class="value">${treatment.lifeRestore}</div>
+                    </div>
+                    <div class="treatment-stat">
+                        <div class="label">Wait Time</div>
+                        <div class="value">${treatment.waitTime}</div>
+                    </div>
+                </div>
+                <p class="treatment-description">${treatment.description}</p>
+                <button class="treatment-btn">
+                    <i class="fas fa-stethoscope"></i> Get Treatment
+                </button>
+            </div>
+        `).join('');
+    }
+
+    loadSurgeryOptions() {
+        const surgeryData = this.getSurgeryData();
+        const container = document.querySelector('#surgery .surgery-options');
+
+        if (!container) return;
+
+        container.innerHTML = surgeryData.map(surgery => `
+            <div class="surgery-card" data-surgery="${surgery.id}">
+                <div class="surgery-header">
+                    <h4><i class="${surgery.icon}"></i> ${surgery.name}</h4>
+                    <span class="surgery-risk ${surgery.risk}">${surgery.risk}</span>
+                </div>
+                <div class="surgery-details">
+                    <div class="surgery-stat">
+                        <div class="label">Cost</div>
+                        <div class="value">$${surgery.cost.toLocaleString()}</div>
+                    </div>
+                    <div class="surgery-stat">
+                        <div class="label">Life Restore</div>
+                        <div class="value">${surgery.lifeRestore}</div>
+                    </div>
+                    <div class="surgery-stat">
+                        <div class="label">Energy Cost</div>
+                        <div class="value">${surgery.energyCost}</div>
+                    </div>
+                </div>
+                <p class="surgery-description">${surgery.description}</p>
+                <button class="surgery-btn">
+                    <i class="fas fa-user-md"></i> Schedule Surgery
+                </button>
+            </div>
+        `).join('');
+    }
+
+    loadPharmacyOptions() {
+        const medicationData = this.getMedicationData();
+        const container = document.querySelector('#pharmacy .pharmacy-options');
+
+        if (!container) return;
+
+        container.innerHTML = medicationData.map(medication => `
+            <div class="pharmacy-card" data-medication="${medication.id}">
+                <div class="pharmacy-header">
+                    <h4><i class="${medication.icon}"></i> ${medication.name}</h4>
+                    <span class="pharmacy-type ${medication.type}">${medication.type}</span>
+                </div>
+                <div class="pharmacy-details">
+                    <div class="pharmacy-stat">
+                        <div class="label">Cost</div>
+                        <div class="value">$${medication.cost.toLocaleString()}</div>
+                    </div>
+                    <div class="pharmacy-stat">
+                        <div class="label">Effect</div>
+                        <div class="value">${medication.effect}</div>
+                    </div>
+                    <div class="pharmacy-stat">
+                        <div class="label">Duration</div>
+                        <div class="value">${medication.duration}</div>
+                    </div>
+                </div>
+                <p class="pharmacy-description">${medication.description}</p>
+                <button class="pharmacy-btn">
+                    <i class="fas fa-pills"></i> Purchase
+                </button>
+            </div>
+        `).join('');
+    }
+
+    loadMedicalRecords() {
+        const container = document.querySelector('#records .records-summary');
+
+        if (!container) return;
+
+        // Summary stats
+        const summaryStats = container.querySelectorAll('.summary-stat span');
+        if (summaryStats.length >= 3) {
+            summaryStats[0].textContent = this.medicalRecords.length.toString();
+            summaryStats[1].textContent = this.medicalRecords.reduce((sum, record) => sum + record.cost, 0).toLocaleString();
+            summaryStats[2].textContent = this.healthInsurance ? 'Active' : 'None';
+        }
+
+        // Records list
+        const recordsContainer = document.querySelector('#records .history-empty');
+        if (recordsContainer) {
+            if (this.medicalRecords.length === 0) {
+                recordsContainer.style.display = 'block';
+            } else {
+                recordsContainer.style.display = 'none';
+                // Show records list here (would need to add the list container)
+            }
+        }
+    }
+
+    getTreatmentData() {
+        return [
+            {
+                id: 'emergency',
+                name: 'Emergency Treatment',
+                icon: 'fas fa-ambulance',
+                cost: 5000,
+                lifeRestore: '+50 HP',
+                waitTime: '10 min',
+                urgency: 'critical',
+                description: 'Immediate medical attention for critical injuries. Restores significant health but requires immediate payment.'
+            },
+            {
+                id: 'pain-relief',
+                name: 'Pain Relief',
+                icon: 'fas fa-pills',
+                cost: 500,
+                lifeRestore: '+10 HP',
+                waitTime: '5 min',
+                urgency: 'minor',
+                description: 'Basic pain medication to reduce discomfort and minor injuries. Quick and affordable treatment option.'
+            },
+            {
+                id: 'physical-therapy',
+                name: 'Physical Therapy',
+                icon: 'fas fa-dumbbell',
+                cost: 2000,
+                lifeRestore: '+20 HP',
+                waitTime: '30 min',
+                urgency: 'moderate',
+                description: 'Professional therapy sessions to improve mobility and treat moderate injuries. Requires energy expenditure.'
+            },
+            {
+                id: 'mental-health',
+                name: 'Mental Health Counseling',
+                icon: 'fas fa-brain',
+                cost: 1500,
+                lifeRestore: '+10 HP',
+                waitTime: '45 min',
+                urgency: 'minor',
+                description: 'Professional counseling to improve mental well-being and reduce stress-related health issues.'
+            },
+            {
+                id: 'checkup',
+                name: 'Health Checkup',
+                icon: 'fas fa-stethoscope',
+                cost: 1000,
+                lifeRestore: 'Variable',
+                waitTime: '20 min',
+                urgency: 'minor',
+                description: 'Comprehensive health examination that may reveal hidden issues or confirm good health.'
+            }
+        ];
+    }
+
+    getSurgeryData() {
+        return [
+            {
+                id: 'trauma',
+                name: 'Trauma Surgery',
+                icon: 'fas fa-user-md',
+                cost: 15000,
+                lifeRestore: '+80 HP',
+                energyCost: '20',
+                risk: 'high',
+                description: 'Major surgical procedure for severe injuries. High success rate but significant recovery time required.'
+            },
+            {
+                id: 'intensive-care',
+                name: 'Intensive Care',
+                icon: 'fas fa-procedures',
+                cost: 25000,
+                lifeRestore: 'Full Recovery',
+                energyCost: '40',
+                risk: 'low',
+                description: 'Complete medical care package including surgery and recovery. Full restoration but very expensive.'
+            }
+        ];
+    }
+
+    getMedicationData() {
+        return [
+            {
+                id: 'painkillers',
+                name: 'Painkillers',
+                icon: 'fas fa-pills',
+                cost: 200,
+                effect: 'Pain Reduction',
+                duration: '4 hours',
+                type: 'otc',
+                description: 'Over-the-counter pain medication to manage discomfort and minor injuries.'
+            },
+            {
+                id: 'antibiotics',
+                name: 'Antibiotics',
+                icon: 'fas fa-capsules',
+                cost: 800,
+                effect: 'Infection Treatment',
+                duration: '7 days',
+                type: 'prescription',
+                description: 'Prescription medication to treat bacterial infections and prevent complications.'
+            },
+            {
+                id: 'vitamins',
+                name: 'Vitamin Supplements',
+                icon: 'fas fa-tablets',
+                cost: 150,
+                effect: 'Health Boost',
+                duration: '24 hours',
+                type: 'otc',
+                description: 'Nutritional supplements to support overall health and recovery.'
+            }
+        ];
+    }
+
+    openTreatmentModal(treatmentId) {
+        const treatmentData = this.getTreatmentData().find(t => t.id === treatmentId) ||
+                            this.getSurgeryData().find(s => s.id === treatmentId);
+
+        if (!treatmentData) return;
+
+        const modal = document.getElementById('treatment-modal');
+        const modalContent = document.querySelector('.treatment-process');
+
+        if (!modal || !modalContent) return;
+
+        const discountedCost = treatmentData.cost * this.getInsuranceDiscount();
+
+        modalContent.innerHTML = `
+            <h4><i class="${treatmentData.icon}"></i> ${treatmentData.name}</h4>
+            <div class="treatment-costs">
+                <div class="cost-breakdown">
+                    <span>Base Cost</span>
+                    <span>$${treatmentData.cost.toLocaleString()}</span>
+                </div>
+                ${this.healthInsurance ? `
+                <div class="cost-breakdown">
+                    <span>Insurance Discount</span>
+                    <span>-$${((treatmentData.cost - discountedCost)).toLocaleString()}</span>
+                </div>
+                ` : ''}
+                <div class="cost-breakdown total">
+                    <span>Total Cost</span>
+                    <span>$${discountedCost.toLocaleString()}</span>
+                </div>
+            </div>
+            <div class="treatment-preview">
+                <h5>Expected Results</h5>
+                <div class="preview-stats">
+                    <div class="preview-stat">
+                        <span>${treatmentData.lifeRestore}</span>
+                        <span>Life Restore</span>
+                    </div>
+                    <div class="preview-stat">
+                        <span>${treatmentData.waitTime}</span>
+                        <span>Wait Time</span>
+                    </div>
+                    ${treatmentData.energyCost ? `
+                    <div class="preview-stat">
+                        <span>-${treatmentData.energyCost}</span>
+                        <span>Energy Cost</span>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            <div class="treatment-actions">
+                <button id="cancel-treatment-btn" class="cancel-treatment-btn">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button id="confirm-treatment-btn" class="confirm-treatment-btn" data-treatment="${treatmentId}">
+                    <i class="fas fa-check"></i> Confirm Treatment
+                </button>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+
+        // Re-bind modal buttons
+        document.getElementById('confirm-treatment-btn')?.addEventListener('click', () => {
+            this.confirmTreatment();
+        });
+
+        document.getElementById('cancel-treatment-btn')?.addEventListener('click', () => {
+            this.closeTreatmentModal();
+        });
+    }
+
+    confirmTreatment() {
+        const confirmBtn = document.getElementById('confirm-treatment-btn');
+        const treatmentId = confirmBtn?.dataset.treatment;
+
+        if (!treatmentId) return;
+
+        const treatmentData = this.getTreatmentData().find(t => t.id === treatmentId) ||
+                            this.getSurgeryData().find(s => s.id === treatmentId);
+
+        if (!treatmentData) return;
+
+        const cost = treatmentData.cost * this.getInsuranceDiscount();
+
+        if (game.player.money < cost) {
+            game.showNotification('Insufficient funds for treatment!', 'error');
+            return;
+        }
+
+        if (treatmentData.energyCost && game.player.energy < treatmentData.energyCost) {
+            game.showNotification('Not enough energy for treatment!', 'error');
+            return;
+        }
+
+        // Apply treatment effects
+        game.player.money -= cost;
+        if (treatmentData.energyCost) {
+            game.player.energy -= treatmentData.energyCost;
+        }
+
+        if (treatmentData.lifeRestore === 'Full Recovery') {
+            game.player.health = 100;
+            game.player.injuries = 0;
+        } else if (treatmentData.lifeRestore.includes('+')) {
+            const restoreAmount = parseInt(treatmentData.lifeRestore.replace('+', ''));
+            game.player.health = Math.min(100, game.player.health + restoreAmount);
+            game.player.injuries = Math.max(0, game.player.injuries - restoreAmount);
+        }
+
+        // Add medical record
+        this.addMedicalRecord(treatmentData.name, cost);
+
+        game.showNotification(`${treatmentData.name} completed successfully!`, 'success');
+        game.updateDisplay();
+        this.updateMedicalStats();
+        this.closeTreatmentModal();
+    }
+
+    purchaseMedication(medicationId) {
+        const medicationData = this.getMedicationData().find(m => m.id === medicationId);
+
+        if (!medicationData) return;
+
+        if (game.player.money < medicationData.cost) {
+            game.showNotification('Insufficient funds for medication!', 'error');
+            return;
+        }
+
+        game.player.money -= medicationData.cost;
+
+        // Apply medication effects
+        if (medicationData.effect === 'Pain Reduction') {
+            game.player.injuries = Math.max(0, game.player.injuries - 5);
+        } else if (medicationData.effect === 'Health Boost') {
+            game.player.health = Math.min(100, game.player.health + 5);
+        }
+
+        this.addMedicalRecord(`${medicationData.name} Purchase`, medicationData.cost);
+        game.showNotification(`${medicationData.name} purchased successfully!`, 'success');
+        game.updateDisplay();
+        this.updateMedicalStats();
+    }
+
+    closeTreatmentModal() {
+        const modal = document.getElementById('treatment-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
 }
 
 // Character Customization System
@@ -12680,6 +17160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.vehicleControlSystem = new VehicleControlSystem();
     window.educationSystem = new EducationSystem();
     window.hospitalSystem = new HospitalSystem();
+    window.hospitalSystem.initializeHospitalSystem();
     window.jailSystem = new JailSystem();
     window.missionSystem = new MissionSystem();
     window.newspaperSystem = new NewspaperSystem();

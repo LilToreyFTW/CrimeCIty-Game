@@ -1,10 +1,12 @@
-import { NextResponse, NextRequest } from 'next/server'
-import jwt from 'jsonwebtoken'
+import { NextResponse, NextRequest } from 'next/server';
+import jwt from 'jsonwebtoken';
 
 interface JwtPayload {
-  userId: string;
+  userId: number;
+  email: string;
+  username: string;
   [key: string]: any;
-};
+}
 import { dbGet, dbRun, ensureDatabase } from '@/lib/database';
 import { getPlayerData, updatePlayerStats, recordCasinoGame } from '@/lib/gameDatabase';
 
@@ -38,10 +40,7 @@ export async function POST(request: NextRequest) {
 
   try {
     await ensureDatabase();
-    
-    const { gameType, betAmount } = await request.json();
-    const playerData = await getPlayerData(auth.userId);
-    
+
     // Casino games and their odds
     const games = {
       'slots': { winChance: 0.3, multiplier: [1, 5] },
@@ -50,9 +49,13 @@ export async function POST(request: NextRequest) {
       'roulette': { winChance: 0.47, multiplier: [1, 36] },
       'dice': { winChance: 0.5, multiplier: [1, 2] },
       'wheel': { winChance: 0.35, multiplier: [1, 10] }
-    };
+    } as const;
 
-    const game = games[gameType];
+    const { gameType, betAmount } = await request.json();
+    const playerData = await getPlayerData(auth.userId);
+
+    // Type-safe access to games object
+    const game = games[gameType as keyof typeof games];
     if (!game) {
       return NextResponse.json(
         { error: 'Invalid game type' },
@@ -107,5 +110,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-

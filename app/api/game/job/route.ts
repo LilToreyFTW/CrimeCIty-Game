@@ -2,7 +2,9 @@ import { NextResponse, NextRequest } from 'next/server'
 import jwt from 'jsonwebtoken'
 
 interface JwtPayload {
-  userId: string;
+  userId: number;
+  email: string;
+  username: string;
   [key: string]: any;
 };
 import { dbGet, dbRun, ensureDatabase } from '@/lib/database';
@@ -45,39 +47,39 @@ export async function POST(request: NextRequest) {
     
     // Job types and requirements
     const jobs = {
-      'Fast Food Worker': { 
-        requirements: { manual_labor: 50 }, 
-        pay: 15, 
+      'Fast Food Worker': {
+        requirements: { manual_labor: 50 },
+        pay: 15,
         energy: 20,
         description: 'Work at a fast food restaurant'
       },
-      'Security Guard': { 
-        requirements: { strength: 60, defense: 50 }, 
-        pay: 25, 
+      'Security Guard': {
+        requirements: { strength: 60, defense: 50 },
+        pay: 25,
         energy: 30,
         description: 'Protect buildings and people'
       },
-      'Delivery Driver': { 
-        requirements: { speed: 60, dexterity: 50 }, 
-        pay: 20, 
+      'Delivery Driver': {
+        requirements: { speed: 60, dexterity: 50 },
+        pay: 20,
         energy: 25,
         description: 'Deliver packages around the city'
       },
-      'Construction Worker': { 
-        requirements: { manual_labor: 80, strength: 70 }, 
-        pay: 35, 
+      'Construction Worker': {
+        requirements: { manual_labor: 80, strength: 70 },
+        pay: 35,
         energy: 40,
         description: 'Build and repair structures'
       },
-      'Software Developer': { 
-        requirements: { intelligence: 80, endurance: 60 }, 
-        pay: 50, 
+      'Software Developer': {
+        requirements: { intelligence: 80, endurance: 60 },
+        pay: 50,
         energy: 30,
         description: 'Develop software and applications'
       }
-    };
+    } as const;
 
-    const job = jobs[jobName];
+    const job = jobs[jobName as keyof typeof jobs];
     if (!job) {
       return NextResponse.json(
         { error: 'Invalid job' },
@@ -123,7 +125,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Work at current job
-export async function PUT(request) {
+export async function PUT(request: NextRequest) {
   const auth = await authenticateToken(request);
   if (auth.error) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });

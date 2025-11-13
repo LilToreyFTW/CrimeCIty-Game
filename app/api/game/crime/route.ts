@@ -1,10 +1,12 @@
-import { NextResponse, NextRequest } from 'next/server'
-import jwt from 'jsonwebtoken'
+import { NextResponse, NextRequest } from 'next/server';
+import jwt from 'jsonwebtoken';
 
 interface JwtPayload {
-  userId: string;
+  userId: number;
+  email: string;
+  username: string;
   [key: string]: any;
-};
+}
 import { dbGet, dbRun, ensureDatabase } from '@/lib/database';
 import { getPlayerData, updatePlayerStats, recordCrime } from '@/lib/gameDatabase';
 
@@ -49,9 +51,9 @@ export async function POST(request: NextRequest) {
       burglary: { risk: 0.6, reward: [200, 800], energy: 25 },
       robbery: { risk: 0.7, reward: [500, 1500], energy: 35 },
       heist: { risk: 0.8, reward: [2000, 5000], energy: 50 }
-    };
+    } as const;
 
-    const crime = crimes[crimeType];
+    const crime = crimes[crimeType as keyof typeof crimes];
     if (!crime) {
       return NextResponse.json(
         { error: 'Invalid crime type' },
@@ -142,5 +144,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-

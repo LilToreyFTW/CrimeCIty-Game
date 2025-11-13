@@ -1,10 +1,13 @@
-import { NextResponse, NextRequest } from 'next/server'
-import jwt from 'jsonwebtoken'
+import { NextResponse, NextRequest } from 'next/server';
+import jwt from 'jsonwebtoken';
 
 interface JwtPayload {
-  userId: string;
+  userId: number;
+  email: string;
+  username: string;
   [key: string]: any;
-};
+}
+
 import { dbGet, dbRun, ensureDatabase } from '@/lib/database';
 import { getPlayerData, updatePlayerStats, recordBattle } from '@/lib/gameDatabase';
 
@@ -127,5 +130,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-

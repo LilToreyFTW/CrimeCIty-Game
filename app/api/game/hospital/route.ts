@@ -2,7 +2,9 @@ import { NextResponse, NextRequest } from 'next/server'
 import jwt from 'jsonwebtoken'
 
 interface JwtPayload {
-  userId: string;
+  userId: number;
+  email: string;
+  username: string;
   [key: string]: any;
 };
 import { dbGet, dbRun, ensureDatabase } from '@/lib/database';
@@ -48,9 +50,9 @@ export async function POST(request: NextRequest) {
       'standard': { cost: 250, lifeRestored: 50 },
       'premium': { cost: 500, lifeRestored: 100 },
       'emergency': { cost: 1000, lifeRestored: 100 }
-    };
+    } as const;
 
-    const treatment = treatments[treatmentType];
+    const treatment = treatments[treatmentType as keyof typeof treatments];
     if (!treatment) {
       return NextResponse.json(
         { error: 'Invalid treatment type' },

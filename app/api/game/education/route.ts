@@ -2,7 +2,9 @@ import { NextResponse, NextRequest } from 'next/server'
 import jwt from 'jsonwebtoken'
 
 interface JwtPayload {
-  userId: string;
+  userId: number;
+  email: string;
+  username: string;
   [key: string]: any;
 };
 import { dbGet, dbAll, ensureDatabase } from '@/lib/database';
@@ -31,7 +33,7 @@ async function authenticateToken(request: NextRequest) {
 }
 
 // Get available courses
-export async function GET(request) {
+export async function GET(request: NextRequest) {
   const auth = await authenticateToken(request);
   if (auth.error) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -137,7 +139,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Complete a course
-export async function PUT(request) {
+export async function PUT(request: NextRequest) {
   const auth = await authenticateToken(request);
   if (auth.error) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });

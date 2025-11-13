@@ -1,10 +1,12 @@
-import { NextResponse, NextRequest } from 'next/server'
-import jwt from 'jsonwebtoken'
+import { NextResponse, NextRequest } from 'next/server';
+import jwt from 'jsonwebtoken';
 
 interface JwtPayload {
-  userId: string;
+  userId: number;
+  email: string;
+  username: string;
   [key: string]: any;
-};
+}
 import { dbGet, dbRun, ensureDatabase } from '@/lib/database';
 import { getPlayerData, initializePlayerData, updatePlayerStats } from '@/lib/gameDatabase';
 
@@ -18,7 +20,7 @@ async function authenticateToken(request: NextRequest) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as JwtPayload as { userId: number; email: string; username: string };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as JwtPayload;
     const user = await dbGet('SELECT id, email, username FROM users WHERE id = ?', [decoded.userId]);
     
     if (!user) {
@@ -31,7 +33,7 @@ async function authenticateToken(request: NextRequest) {
   }
 }
 
-export async function GET(request) {
+export async function GET(request: NextRequest) {
   const auth = await authenticateToken(request);
   if (auth.error) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -122,5 +124,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-
