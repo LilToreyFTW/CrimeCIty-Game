@@ -1,9 +1,14 @@
-import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { NextResponse, NextRequest } from 'next/server'
+import jwt from 'jsonwebtoken'
+
+interface JwtPayload {
+  userId: string;
+  [key: string]: any;
+};
 import { dbGet, dbAll, ensureDatabase } from '@/lib/database';
 import { getPlayerData, updatePlayerStats, enrollInCourse, completeCourse, getPlayerEducation } from '@/lib/gameDatabase';
 
-async function authenticateToken(request) {
+async function authenticateToken(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   const token = authHeader?.split(' ')[1];
 
@@ -12,7 +17,7 @@ async function authenticateToken(request) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as JwtPayload;
     const user = await dbGet('SELECT id, email, username FROM users WHERE id = ?', [decoded.userId]);
     
     if (!user) {
@@ -60,7 +65,7 @@ export async function GET(request) {
 }
 
 // Enroll in a course
-export async function POST(request) {
+export async function POST(request: NextRequest) {
   const auth = await authenticateToken(request);
   if (auth.error) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -202,3 +207,5 @@ export async function PUT(request) {
     );
   }
 }
+
+
